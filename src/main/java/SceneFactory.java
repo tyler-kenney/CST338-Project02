@@ -47,7 +47,7 @@ public interface SceneFactory {
     }
 
     //Class static method Create. Using enum case switch.
-    static Scene Create(SceneType sceneType, Stage stage) {
+    static Scene Create(SceneType sceneType, Stage stage) {   //TODO: refactor to accept database
         return switch (sceneType) {
             case Login -> BuildUserLogin(stage);
             //Most likely won't be reach unless we're testing.
