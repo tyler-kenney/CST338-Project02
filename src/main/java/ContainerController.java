@@ -3,6 +3,8 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 /**
+ * Used by Container.fxml, to help setup the correct stage.
+ *
  * @author : @erict
  * <br>
  * @created : 4/14/26

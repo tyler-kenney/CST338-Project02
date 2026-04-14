@@ -14,6 +14,7 @@ public class Main extends Application {
 
   private DatabaseManager db;
 
+  //Initilized database, displays on console whether successful.
   @Override
   public void init() throws Exception{
     db = new DatabaseManager();

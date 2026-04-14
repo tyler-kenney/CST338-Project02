@@ -52,7 +52,8 @@ public interface SceneFactory {
 
   //Class static method Create. Using enum case switch.
   static Scene Create(SceneType sceneType, Stage stage,
-                      DatabaseManager db) {   //TODO: refactor to accept database
+                      DatabaseManager db) {
+    //Create now loads from resource file to help set stage.
     try {
       FXMLLoader FXML = new FXMLLoader(SceneFactory.class.getResource("/fxml/Container.fxml"));
 
