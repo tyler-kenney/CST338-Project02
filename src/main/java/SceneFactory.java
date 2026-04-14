@@ -293,6 +293,18 @@ public interface SceneFactory {
   private static Scene BuildLeaderboard(Stage stage, DatabaseManager db){
     Button Logout = new Button("Logout");
     Button ReturnToMenu = new Button("Return to Menu");
+    List<Leaderboard> leaders = new ArrayList<>(db.getAllQuizes());
+    StringBuilder stringBuilder = new StringBuilder();
+    for (Leaderboard leader : leaders) {
+      stringBuilder.append(leader.toString());
+    }
+    Label leaderboardDisplay = new Label(stringBuilder.toString());
+
+
+
+
+
+
 
     Logout.setOnAction(a -> {
       LogoutMessage();
@@ -305,7 +317,7 @@ public interface SceneFactory {
       stage.setScene(Adminscene);
     });
 
-    VBox root = new VBox(12,ReturnToMenu,Logout);
+    VBox root = new VBox(12,leaderboardDisplay,ReturnToMenu,Logout);
     root.setPadding(new Insets(SCENE_PADDING));
     root.setAlignment(Pos.CENTER);
     return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);

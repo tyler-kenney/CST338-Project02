@@ -50,13 +50,21 @@ public class DatabaseManager {
   private void createTables() {
     // Text blocks ( Java 15+) keep multi - line SQL readable
     //type = 0 or 1 (user or admin)
+    //TODO:Refactor to multithread.
     String users_sql = """
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL,
-            usertype INTEGER NOT NULL
-        )
+        CREATE TABLE IF NOT EXISTS users
+         (
+             id       INTEGER PRIMARY KEY AUTOINCREMENT,
+             username TEXT    NOT NULL UNIQUE,
+             password TEXT    NOT NULL,
+             usertype INTEGER NOT NULL
+         )
+        """;
+    String insert_users = """
+        INSERT OR IGNORE INTO users (username, password, usertype)
+                           VALUES ('BartSimpson', 'EatMyShorts!', 0),
+                                  ('SlimShady', 'PleaseStandUp?', 1),
+                                  ('admin', '123', 1)
         """;
 
     String categories_sql = """
@@ -67,43 +75,124 @@ public class DatabaseManager {
         )
         """;
 
+    String insert_categories_sql = """
+        INSERT OR IGNORE INTO categories (category, description)
+        VALUES ('MidJourney Term', 'These are questions to prepare for the mid-Journey-term');
+        INSERT OR IGNORE INTO categories (category)
+        VALUES ('Wk01');
+        """;
+
     String questions_sql = """
         CREATE TABLE IF NOT EXISTS questions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             category_id INTEGER NOT NULL REFERENCES categories(id), --foreign key
             question TEXT NOT NULL UNIQUE,
-            possible_answers TEXT NOT NULL,
-            answer INTEGER NOT NULL,
+            option_a TEXT NOT NULL,
+            option_b TEXT NOT NULL,
+            option_c TEXT NOT NULL,
+            option_d TEXT NOT NULL,
+            answer INTEGER NOT NULL,    --1-4 (a-d)
             created DATETIME DEFAULT CURRENT_TIMESTAMP,
             user_id INTEGER NO NULL REFERENCES users(id), --foreign key
             attempts INTEGER DEFAULT 0
         )
         """;
 
-    String question_attempts_sql = """
-        CREATE TABLE IF NOT EXISTS question_attempts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        question_id INTEGER NOT NULL REFERENCES questions(id),
-        attempt_id INTEGER NOT NULL REFERENCES quiz_attempts(id),
-        is_correct INTEGER NOT NULL   --0 for no, 1 for yes
+    String insert_questions_sql = """
+        INSERT OR IGNORE INTO questions (
+          category_id,
+          question,
+          option_a,
+          option_b,
+          option_c,
+          option_d,
+          answer,
+          user_id
         )
+        VALUES (
+        (SELECT id FROM categories WHERE category = 'MidJourney Term'),
+        'Which is NOT a valid way to call a constructor?',
+        'Too too = new car()',
+        'this(42, noCake);',
+        'Mine mine = new Mine();',
+        'Yo Mama is a Constructor!',
+        4,
+        (SELECT id FROM users WHERE username = 'admin')
+        ),
+        ((Select id FROM categories WHERE category = 'Wk01'),
+        'Which of the following is true about a method that has this declaration? \n \n public Karen getDepartmentManager(){...}',
+        'it’s defined in the Karen class',
+        'it returns an object of the Karen class',
+        'it’s only accessible within its class',
+        'it is an instance method of the Karen class that can access instance variables of Employee',
+        2,
+        (SELECT id FROM users WHERE username = 'SlimShady'))
+        """;
+//TODO:Refactor points to be total earned points. Update when necessary
+    //TODO:add attribute for total points.
+    String quiz_attempts_sql = """
+        CREATE TABLE IF NOT EXISTS quiz_attempts
+         (
+             id          INTEGER PRIMARY KEY AUTOINCREMENT,
+             user_id     INTEGER NOT NULL REFERENCES users (id),      --foreign key
+             category_id INTEGER NOT NULL REFERENCES categories (id), --foreign key
+             time_taken  DATETIME DEFAULT CURRENT_TIMESTAMP,
+             points      DOUBLE  NOT NULL                       --1.0 if correct, 0.0 if incorrect,
+         )
         """;
 
-    String quiz_attempts_sql = """
-        CREATE TABLE IF NOT EXISTS quiz_attempts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL REFERENCES users(id), --foreign key
-            category_id INTEGER NOT NULL REFERENCES categories(id), --foreign key
-            time_taken DATETIME DEFAULT CURRENT_TIMESTAMP,
-            score DOUBLE NOT NULL
-        )
+    String insert_quiz_attempts_sql = """
+        INSERT INTO quiz_attempts (user_id, category_id, points)
+           VALUES ((SELECT id FROM users WHERE username = 'BartSimpson'),
+                   (SELECT id FROM categories WHERE category = 'MidJourney Term'),
+                   0.0),
+                  ((SELECT id FROM users WHERE username = 'BartSimpson'),
+                  (SELECT id FROM categories WHERE category = 'MidJourney Term'),
+                   1.0)
         """;
+
+    String question_attempts_sql = """
+        CREATE TABLE IF NOT EXISTS question_attempts
+         (
+             id          INTEGER PRIMARY KEY AUTOINCREMENT,
+             question_id INTEGER NOT NULL REFERENCES questions (id),
+             attempt_id  INTEGER NOT NULL REFERENCES quiz_attempts (id),
+             is_correct  INTEGER NOT NULL --0 for no, 1 for yes
+         )
+        """;
+
+    String insert_question_attempts_sql = """
+        INSERT INTO question_attempts (question_id, attempt_id, is_correct)
+         VALUES ((SELECT id FROM questions WHERE id = 1),
+                 (SELECT id FROM quiz_attempts WHERE id = 1),
+                 0),
+                ((SELECT id FROM questions WHERE id = 2,
+                 (SELECT id FROM quiz_attempts WHERE id = 2),
+                 1)
+        """;
+
     try (Statement stmt = connection.createStatement()) {
+      stmt.execute("DROP TABLE users");
+      stmt.execute("DROP TABLE categories");
+      stmt.execute("DROP TABLE questions");
+      stmt.execute("DROP TABLE quiz_attempts");
+      stmt.execute("DROP TABLE question_attempts");
+
       stmt.execute(users_sql);
+      stmt.execute(insert_users);
+
       stmt.execute(categories_sql);
+      stmt.execute(insert_categories_sql);
+
       stmt.execute(questions_sql);
+      stmt.execute(insert_questions_sql);
+
       stmt.execute(quiz_attempts_sql);
+      stmt.execute(insert_quiz_attempts_sql);
+
       stmt.execute(question_attempts_sql);
+      stmt.execute(insert_question_attempts_sql);
+
 
     } catch (SQLException e) {
       System.out.println(" createTables failed : " + e.getMessage());
@@ -150,6 +239,7 @@ public class DatabaseManager {
 
   /**
    * CRUD - Read (Select)
+   *
    * @param username
    * @return
    */
@@ -173,6 +263,7 @@ public class DatabaseManager {
 
   /**
    * CRUD - Read (Select)
+   *
    * @param username
    * @param password
    * @return
@@ -208,9 +299,25 @@ public class DatabaseManager {
         users.add(rs.getString("username")); // read column by name
       }
     } catch (SQLException e) {
-      System.out.println(" getAllItems failed : " + e.getMessage());
+      System.out.println(" getAllUsernames failed : " + e.getMessage());
     }
     return users;
+  }
+
+  public List<Leaderboard> getAllQuizes() {
+    List<Leaderboard> leaders = new ArrayList<>();
+    String sql = " SELECT * FROM quiz_attempts ORDER BY user_id DESC";
+    try (Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(sql)) {
+      while (rs.next()) { // move to next row
+        int userID = (rs.getInt("user_id"));
+        int categoryID = (rs.getInt("category_id"));
+        double points = rs.getDouble("points");
+      }
+    } catch (SQLException e) {
+      System.out.println(" getAllQuizes failed : " + e.getMessage());
+    }
+    return leaders;
   }
 
   /**
