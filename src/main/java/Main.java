@@ -26,7 +26,7 @@ public class Main extends Application {
 
     db = new DatabaseManager();
 
-    Scene scene = SceneFactory.Create(SceneType.Login, stage);
+    Scene scene = SceneFactory.Create(SceneType.Login, stage, db);
     // text shown in the OS title bar
     stage.setScene(scene);
     stage.show();       // make the window visible
