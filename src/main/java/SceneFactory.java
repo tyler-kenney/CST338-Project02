@@ -1,3 +1,4 @@
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -52,14 +53,29 @@ public interface SceneFactory {
   //Class static method Create. Using enum case switch.
   static Scene Create(SceneType sceneType, Stage stage,
       DatabaseManager db) {   //TODO: refactor to accept database
-    return switch (sceneType) {
-      case Login -> BuildUserLogin(stage, db);
-      //Most likely won't be reach unless we're testing.
-      case NewUser -> BuildNewAccount(stage, db);
-      case Administrator -> BuildAdminUser(stage, db);
-      case General -> BuildGeneralUser(stage, db);
+    try{
+      FXMLLoader FXML = new FXMLLoader(SceneFactory.class.getResource("Container.fxml"));
+      Scene scene = new Scene(FXML.load(), SCENE_WIDTH, SCENE_HEIGHT);
+      ContainerController containerController = FXML.getController();
+      containerController.setStage(stage);
+      containerController.setDatabase(db);
+      VBox Content = null;
 
-    };
+      switch (sceneType){
+        case Login:
+          content = BuildUserLogin(stage, db);
+          break;
+        case NewUser:
+          content = BuildNewAccount(stage, db);
+          break;
+        case Administrator:
+          content = BuildAdminUser(stage, db);
+          break;
+        case General:
+          content = BuildGeneralUser(stage,db);
+          break;
+      }
+    }
   }
 
   /**
@@ -325,6 +341,8 @@ public interface SceneFactory {
       Scene Adminscene = BuildAdminUser(stage, db);
       stage.setScene(Adminscene);
     });
+
+    private static Scene Leaderboard(stage, db)
 
     VBox root = new VBox(12,ReturnToMenu,Logout);
     root.setPadding(new Insets(SCENE_PADDING));
