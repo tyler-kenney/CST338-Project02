@@ -14,6 +14,11 @@ public class Main extends Application {
 
   private DatabaseManager db;
 
+  @Override
+  public void init() throws Exception{
+    db = new DatabaseManager();
+    System.out.println("Database initialized successfully");
+  }
   /**
    *
    * @param stage the primary stage for this application, onto which
@@ -23,9 +28,6 @@ public class Main extends Application {
    */
   @Override
   public void start(Stage stage) {
-
-    db = new DatabaseManager();
-
     Scene scene = SceneFactory.Create(SceneType.Login, stage, db);
     // text shown in the OS title bar
     stage.setScene(scene);
@@ -37,7 +39,10 @@ public class Main extends Application {
    */
   @Override
   public void stop () {
-    if ( db != null ) db . close () ; // called automatically on window close
+    if (db != null ) {
+      db . close () ; // called automatically on window close
+      System.out.println("Database connection closed");
+    }
   }
 
   public static void main(String[] args) {

@@ -8,5 +8,6 @@ public enum SceneType {
     Login,
     NewUser,
     Administrator,
-    General
+    General,
+    Leaderboard
 }
