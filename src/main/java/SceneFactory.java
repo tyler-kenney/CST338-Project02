@@ -62,6 +62,12 @@ public interface SceneFactory {
     };
   }
 
+  /**
+   * This method displays the stage for creating new account.
+   * @param stage contains stage
+   * @param db contains database
+   * @return Scene
+   */
   private static Scene BuildNewAccount(Stage stage, DatabaseManager db) {
     Label PromptNewUserName = new Label("Enter New Username: ");
     Label PromptNewPassword = new Label("Enter New Password: ");
@@ -89,6 +95,11 @@ public interface SceneFactory {
       }
       if (!db.isUsername(username)) {
         db.insertUserItem(username, password, role_num);
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Account Creation");
+        alert.setHeaderText("Account Created");
+        alert.setContentText("Account Created Successfully!");
+        alert.showAndWait();
         Scene BackScene = BuildUserLogin(stage, db);
         stage.setScene(BackScene);
       } else {
@@ -115,7 +126,7 @@ public interface SceneFactory {
   }
 
   /**
-   *
+   * This method displays the scene for All user log ins.
    * @param stage BuildUserLogin
    * @return User Login screen, prompting user to enter Username and Password.
    *
@@ -230,19 +241,27 @@ public interface SceneFactory {
    */
   private static Scene BuildAdminUser(Stage stage, DatabaseManager db) {
     Button Logout = new Button("Logout");
+    Button DisplayLeaderboard = new Button("Display Leaderboard");
+    Button MakeQuestion = new Button("Make Question");
     stage.setTitle("Administrator Menu");
 
+    DisplayLeaderboard.setOnAction(e -> {
+      Scene Leaderboard = BuildLeaderboard(stage, db);
+      stage.setScene(Leaderboard);
+    });
+
+    MakeQuestion.setOnAction(e -> {
+      Scene CreateQuestion = BuildQuestionGenerator(stage, db);
+      stage.setScene(CreateQuestion);
+    });
+
     Logout.setOnAction(a -> {
-      Alert AlertLogout = new Alert(Alert.AlertType.INFORMATION);
-      AlertLogout.setTitle("Successfully Logged Out!");
-      AlertLogout.setHeaderText("Logging Out. . . ");
-      AlertLogout.setContentText("You have successfully logged out");
-      AlertLogout.showAndWait();
+      LogoutMessage();
       Scene BackScene = BuildUserLogin(stage, db);
       stage.setScene(BackScene);
     });
     //stage.setTitle("Administrator");
-    VBox root = new VBox(12, Logout);
+    VBox root = new VBox(12, DisplayLeaderboard, MakeQuestion, Logout);
     root.setPadding(new Insets(SCENE_PADDING));
     root.setAlignment(Pos.CENTER);
     // Scene holds the layout and defines the window size
@@ -259,8 +278,7 @@ public interface SceneFactory {
     stage.setTitle("User Menu");
 
     Logout.setOnAction(a -> {
-      Alert AlertLogout = new Alert(Alert.AlertType.INFORMATION);
-      AlertLogout.setTitle("Successfully Logged Out!");
+      LogoutMessage();
       Scene BackScene = BuildUserLogin(stage, db);
       stage.setScene(BackScene);
     });
@@ -272,4 +290,53 @@ public interface SceneFactory {
     return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
   }
 
+  private static Scene BuildLeaderboard(Stage stage, DatabaseManager db){
+    Button Logout = new Button("Logout");
+    Button ReturnToMenu = new Button("Return to Menu");
+
+    Logout.setOnAction(a -> {
+      LogoutMessage();
+      Scene BackScene = BuildUserLogin(stage, db);
+      stage.setScene(BackScene);
+    });
+
+    ReturnToMenu.setOnAction(a -> {
+      Scene Adminscene = BuildAdminUser(stage, db);
+      stage.setScene(Adminscene);
+    });
+
+    VBox root = new VBox(12,ReturnToMenu,Logout);
+    root.setPadding(new Insets(SCENE_PADDING));
+    root.setAlignment(Pos.CENTER);
+    return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+  }
+
+  private static Scene BuildQuestionGenerator(Stage stage, DatabaseManager db){
+    Button Logout = new Button("Logout");
+    Button ReturnToMenu = new Button("Return to Menu");
+
+    Logout.setOnAction(a -> {
+      LogoutMessage();
+      Scene BackScene = BuildUserLogin(stage, db);
+      stage.setScene(BackScene);
+    });
+
+    ReturnToMenu.setOnAction(a -> {
+      Scene Adminscene = BuildAdminUser(stage, db);
+      stage.setScene(Adminscene);
+    });
+
+    VBox root = new VBox(12,ReturnToMenu,Logout);
+    root.setPadding(new Insets(SCENE_PADDING));
+    root.setAlignment(Pos.CENTER);
+    return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+  }
+
+  private static void LogoutMessage(){
+    Alert AlertLogout = new Alert(Alert.AlertType.INFORMATION);
+    AlertLogout.setTitle("Successfully Logged Out!");
+    AlertLogout.setHeaderText("Logging Out...");
+    AlertLogout.setContentText("You have successfully logged out");
+    AlertLogout.showAndWait();
+  }
 }
