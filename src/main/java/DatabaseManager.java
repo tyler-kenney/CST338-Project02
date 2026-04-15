@@ -384,4 +384,5 @@ public class DatabaseManager {
     }
     return categories;
   }
+
 }

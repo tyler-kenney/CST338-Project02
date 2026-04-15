@@ -305,6 +305,7 @@ public interface SceneFactory {
     }
 
     private static Scene BuildQuestionGenerator (Stage stage, DatabaseManager db){
+      //Creates labels and text fields for question input.
       Label QuestionLabel = new Label("Question:");
       TextField QuestionField = new TextField();
       QuestionField.setPrefWidth(INPUT_WIDTH);
@@ -332,11 +333,13 @@ public interface SceneFactory {
 
       Label AnswerLabel = new Label("Select Answer:");
 
+      //Creates Buttons for Answer Choices
       Button A_Button = new Button("A");
       Button B_Button = new Button("B");
       Button C_Button = new Button("C");
       Button D_Button = new Button("D");
 
+      //Stores selected Answer.
       final int[]SelectAnswer = {0};
 
       A_Button.setPrefWidth(60);
@@ -344,6 +347,7 @@ public interface SceneFactory {
       C_Button.setPrefWidth(60);
       D_Button.setPrefWidth(60);
 
+      //Selected Button is highlighted lightgreen.
       A_Button.setOnAction(a -> {
         SelectAnswer[0] =1;
         A_Button.setStyle("-fx-background-color: lightgreen;");
@@ -376,6 +380,7 @@ public interface SceneFactory {
         D_Button.setStyle("-fx-background-color: lightgreen;");
       });
 
+      //Horizontal box for answer buttons.
       javafx.scene.layout.HBox AnswerButtonsBox = new javafx.scene.layout.HBox(10,
               A_Button, B_Button, C_Button, D_Button);
       AnswerButtonsBox.setAlignment(Pos.CENTER);
@@ -392,12 +397,14 @@ public interface SceneFactory {
         System.out.println("Failed to load Categories" + e.getMessage());
       }
 
+      //Status label for feedback
       Label statusLabel = new Label("");
 
       Button submitButton = new Button("Submit Question");
       Button Logout = new Button("Logout");
       Button ReturnToMenu = new Button("Return to Menu");
 
+      //Submit button action
       submitButton.setOnAction(a -> {
         String Question =  QuestionField.getText().trim();
         String OptionA =  OptionAField.getText().trim();
@@ -406,6 +413,7 @@ public interface SceneFactory {
         String OptionD =  OptionDField.getText().trim();
         String SelectedCategory = categoryCombo.getValue();
 
+        //Validation
         if(Question.isEmpty() || OptionA.isEmpty() || OptionB.isEmpty() ||  OptionC.isEmpty() ||
                 OptionD.isEmpty() || SelectedCategory.isEmpty()){
           statusLabel.setText("Please fill all the fields");
@@ -417,6 +425,7 @@ public interface SceneFactory {
           return;
         }
 
+        //TODO: Pass to DatabaseManager through a class.
         statusLabel.setText("Correct Answer: " + (char) ('A' + SelectAnswer[0] -1));
 
         // Clear fields after successful validation
