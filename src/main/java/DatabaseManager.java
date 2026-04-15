@@ -548,16 +548,16 @@ public class DatabaseManager {
     }
   }
 
-  public List<String> getAllCategories() {
+  public List<String> getCategoryNames() {
     List<String> categories = new ArrayList<>();
     String sql = "SELECT category FROM categories ORDER BY id";
-    try(Statement statement = connection.createStatement();
-    ResultSet rs = statement.executeQuery(sql)) {
+    try (Statement stmt = connection.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
       while (rs.next()) {
         categories.add(rs.getString("category"));
       }
     } catch (SQLException e) {
-      System.out.println(" getAllCategories failed : " + e.getMessage());
+      System.out.println("getCategoryNames failed: " + e.getMessage());
     }
     return categories;
   }

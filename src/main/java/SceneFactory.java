@@ -2,16 +2,15 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.*;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -381,24 +380,22 @@ public interface SceneFactory {
       });
 
       //Horizontal box for answer buttons.
-      javafx.scene.layout.HBox AnswerButtonsBox = new javafx.scene.layout.HBox(10,
+      HBox AnswerButtonsBox = new javafx.scene.layout.HBox(10,
               A_Button, B_Button, C_Button, D_Button);
       AnswerButtonsBox.setAlignment(Pos.CENTER);
 
       Label categoryLabel = new Label("Category:");
-      javafx.scene.control.ComboBox<String> categoryCombo = new javafx.scene.control.ComboBox<>();
+      ComboBox<String> categoryCombo = new javafx.scene.control.ComboBox<>();
       categoryCombo.setPrefWidth(INPUT_WIDTH);
       categoryCombo.setPromptText("Select a category");
-
-      try{
-        List<String> Categories = db.getAllCategories();
-        categoryCombo.getItems().addAll(Categories);
-      } catch (Exception e){
-        System.out.println("Failed to load Categories" + e.getMessage());
-      }
-
       //Status label for feedback
       Label statusLabel = new Label("");
+      List<String> categories = new ArrayList<>();
+      if(categories.isEmpty()){
+        statusLabel.setText("No categories available, Please add categories.");
+      } else {
+        categoryCombo.getItems().addAll(categories);
+      }
 
       Button submitButton = new Button("Submit Question");
       Button Logout = new Button("Logout");
@@ -425,8 +422,19 @@ public interface SceneFactory {
           return;
         }
 
-        //TODO: Pass to DatabaseManager through a class.
-        statusLabel.setText("Correct Answer: " + (char) ('A' + SelectAnswer[0] -1));
+        int categoryID = db.getCategoryId(SelectedCategory);
+        if(categoryID == -1){
+          statusLabel.setText("Invalid category");
+        }
+
+        int UserID = 1;
+        int QuestionID =
+                db.insertQuestion(categoryID, Question, OptionA,
+                                 OptionB, OptionC, OptionD,
+                                  SelectAnswer[0], UserID);
+        if(QuestionID == -1){
+          statusLabel.setText("Question Submitted");
+        }
 
         // Clear fields after successful validation
         QuestionField.clear();
