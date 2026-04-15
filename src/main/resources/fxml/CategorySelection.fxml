@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" spacing="15"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="CategorySelectionController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Otter CS Trivia" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+    <Label text="Select a Quiz Category"/>
+    <Label text="Choose a category and click Start Quiz"/>
+
+    <ListView fx:id="categoryListView" prefHeight="200" prefWidth="300"/>
+
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Start Quiz" onAction="#handleStartQuiz"/>
+        <Button text="Return to Menu" onAction="#handleReturnToMenu"/>
+    </HBox>
+
+    <Label fx:id="messageLabel" style="-fx-text-fill: red;"/>
+
+</VBox>
