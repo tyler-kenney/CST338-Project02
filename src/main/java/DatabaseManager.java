@@ -14,7 +14,7 @@ public class DatabaseManager {
 
   // " jdbc : sqlite :" tells JDBC which driver to use .
   // The path after it is the database file location .
-  private static final String DB_URL = "jdbc:sqlite:mybd.db";
+  private static final String DB_URL = "jdbc:sqlite:mydb.db";
   private Connection connection;
 
   /**
