@@ -1,5 +1,5 @@
 /**
- * [brief one-sentence description of what this class is.]
+ * This class will be used to pass leaderboard info from database to scenefactory.
  *
  * @ author: Tyler Kenney
  * @ since:  4/14/2026
