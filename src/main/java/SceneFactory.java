@@ -305,8 +305,133 @@ public interface SceneFactory {
     }
 
     private static Scene BuildQuestionGenerator (Stage stage, DatabaseManager db){
+      Label QuestionLabel = new Label("Question:");
+      TextField QuestionField = new TextField();
+      QuestionField.setPrefWidth(INPUT_WIDTH);
+      QuestionField.setPromptText("Enter Question");
+
+      Label OptionALabel = new Label("A) ");
+      TextField OptionAField = new TextField();
+      OptionALabel.setPrefWidth(INPUT_WIDTH);
+      OptionAField.setPromptText("Enter option A:");
+
+      Label OptionBLabel = new Label("B) ");
+      TextField OptionBField = new TextField();
+      OptionBLabel.setPrefWidth(INPUT_WIDTH);
+      OptionBField.setPromptText("Enter option B:");
+
+      Label OptionCLabel = new Label("C) ");
+      TextField OptionCField = new TextField();
+      OptionCLabel.setPrefWidth(INPUT_WIDTH);
+      OptionCField.setPromptText("Enter option C:");
+
+      Label OptionDLabel = new Label("D) ");
+      TextField OptionDField = new TextField();
+      OptionDLabel.setPrefWidth(INPUT_WIDTH);
+      OptionDField.setPromptText("Enter option D");
+
+      Label AnswerLabel = new Label("Select Answer:");
+
+      Button A_Button = new Button("A");
+      Button B_Button = new Button("B");
+      Button C_Button = new Button("C");
+      Button D_Button = new Button("D");
+
+      final int[]SelectAnswer = {0};
+
+      A_Button.setPrefWidth(60);
+      B_Button.setPrefWidth(60);
+      C_Button.setPrefWidth(60);
+      D_Button.setPrefWidth(60);
+
+      A_Button.setOnAction(a -> {
+        SelectAnswer[0] =1;
+        A_Button.setStyle("-fx-background-color: lightgreen;");
+        B_Button.setStyle("");
+        C_Button.setStyle("");
+        D_Button.setStyle("");
+      });
+
+      B_Button.setOnAction(a -> {
+        SelectAnswer[0] =1;
+        A_Button.setStyle("");
+        B_Button.setStyle("-fx-background-color: lightgreen;");
+        C_Button.setStyle("");
+        D_Button.setStyle("");
+      });
+
+      C_Button.setOnAction(a -> {
+        SelectAnswer[0] =1;
+        A_Button.setStyle("");
+        B_Button.setStyle("");
+        C_Button.setStyle("-fx-background-color: lightgreen;");
+        D_Button.setStyle("");
+      });
+
+      D_Button.setOnAction(a -> {
+        SelectAnswer[0] =1;
+        A_Button.setStyle("");
+        B_Button.setStyle("");
+        C_Button.setStyle("");
+        D_Button.setStyle("-fx-background-color: lightgreen;");
+      });
+
+      javafx.scene.layout.HBox AnswerButtonsBox = new javafx.scene.layout.HBox(10,
+              A_Button, B_Button, C_Button, D_Button);
+      AnswerButtonsBox.setAlignment(Pos.CENTER);
+
+      Label categoryLabel = new Label("Category:");
+      javafx.scene.control.ComboBox<String> categoryCombo = new javafx.scene.control.ComboBox<>();
+      categoryCombo.setPrefWidth(INPUT_WIDTH);
+      categoryCombo.setPromptText("Select a category");
+
+      try{
+        List<String> Categories = db.getAllCategories();
+        categoryCombo.getItems().addAll(Categories);
+      } catch (Exception e){
+        System.out.println("Failed to load Categories" + e.getMessage());
+      }
+
+      Label statusLabel = new Label("");
+
+      Button submitButton = new Button("Submit Question");
       Button Logout = new Button("Logout");
       Button ReturnToMenu = new Button("Return to Menu");
+
+      submitButton.setOnAction(a -> {
+        String Question =  QuestionField.getText().trim();
+        String OptionA =  OptionAField.getText().trim();
+        String OptionB =  OptionBField.getText().trim();
+        String OptionC =  OptionCField.getText().trim();
+        String OptionD =  OptionDField.getText().trim();
+        String SelectedCategory = categoryCombo.getValue();
+
+        if(Question.isEmpty() || OptionA.isEmpty() || OptionB.isEmpty() ||  OptionC.isEmpty() ||
+                OptionD.isEmpty() || SelectedCategory.isEmpty()){
+          statusLabel.setText("Please fill all the fields");
+          return;
+        }
+
+        if(SelectAnswer[0] == 0){
+          statusLabel.setText("Please select the correct answer: ");
+          return;
+        }
+
+        statusLabel.setText("Correct Answer: " + (char) ('A' + SelectAnswer[0] -1));
+
+        // Clear fields after successful validation
+        QuestionField.clear();
+        OptionAField.clear();
+        OptionBField.clear();
+        OptionCField.clear();
+        OptionDField.clear();
+        categoryCombo.setValue(null);
+        SelectAnswer[0] = 0;
+        A_Button.setStyle("");
+        B_Button.setStyle("");
+        C_Button.setStyle("");
+        D_Button.setStyle("");
+      });
 
       Logout.setOnAction(a -> {
         LogoutMessage();
@@ -318,11 +443,24 @@ public interface SceneFactory {
         Scene Adminscene = Create(SceneType.Administrator, stage, db);
         stage.setScene(Adminscene);
       });
-      VBox root = new VBox(12, ReturnToMenu, Logout);
+      VBox root = new VBox(
+              12, QuestionLabel, QuestionField,
+              OptionALabel, OptionAField,
+              OptionBLabel, OptionBField,
+              OptionCLabel, OptionCField,
+              OptionDLabel, OptionDField,
+              AnswerLabel, AnswerButtonsBox,
+              submitButton, statusLabel,
+              ReturnToMenu, Logout);
       root.setPadding(new Insets(SCENE_PADDING));
       root.setAlignment(Pos.CENTER);
+
+      javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane(root);
+      scrollPane.setFitToWidth(true);
+      scrollPane.setPrefHeight(SCENE_HEIGHT);
       return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
     }
+
     private static void LogoutMessage () {
       Alert AlertLogout = new Alert(Alert.AlertType.INFORMATION);
       AlertLogout.setTitle("Successfully Logged Out!");

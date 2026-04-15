@@ -371,5 +371,17 @@ public class DatabaseManager {
     //TODO: update number of rows affected.
   }
 
-
+  public List<String> getAllCategories() {
+    List<String> categories = new ArrayList<>();
+    String sql = "SELECT category FROM categories ORDER BY id";
+    try(Statement statement = connection.createStatement();
+    ResultSet rs = statement.executeQuery(sql)) {
+      while (rs.next()) {
+        categories.add(rs.getString("category"));
+      }
+    } catch (SQLException e) {
+      System.out.println(" getAllCategories failed : " + e.getMessage());
+    }
+    return categories;
+  }
 }
