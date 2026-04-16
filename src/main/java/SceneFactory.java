@@ -2,16 +2,15 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.*;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -304,25 +303,169 @@ public interface SceneFactory {
       return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
     }
 
-    private static Scene BuildQuestionGenerator (Stage stage, DatabaseManager db){
-      Button Logout = new Button("Logout");
-      Button ReturnToMenu = new Button("Return to Menu");
+  private static Scene BuildQuestionGenerator(Stage stage, DatabaseManager db) {
+    // Create labels and text fields for question input
+    Label questionLabel = new Label("Enter Question:");
+    TextField questionField = new TextField();
+    questionField.setPrefWidth(INPUT_WIDTH);
+    questionField.setPromptText("Type your question here...");
 
-      Logout.setOnAction(a -> {
-        LogoutMessage();
-        Scene BackScene = Create(SceneType.Login, stage, db);
-        stage.setScene(BackScene);
-      });
+    Label optionALabel = new Label("Option A:");
+    TextField optionAField = new TextField();
+    optionAField.setPrefWidth(INPUT_WIDTH);
+    optionAField.setPromptText("Enter option A");
 
-      ReturnToMenu.setOnAction(a -> {
-        Scene Adminscene = Create(SceneType.Administrator, stage, db);
-        stage.setScene(Adminscene);
-      });
-      VBox root = new VBox(12, ReturnToMenu, Logout);
-      root.setPadding(new Insets(SCENE_PADDING));
-      root.setAlignment(Pos.CENTER);
-      return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+    Label optionBLabel = new Label("Option B:");
+    TextField optionBField = new TextField();
+    optionBField.setPrefWidth(INPUT_WIDTH);
+    optionBField.setPromptText("Enter option B");
+
+    Label optionCLabel = new Label("Option C:");
+    TextField optionCField = new TextField();
+    optionCField.setPrefWidth(INPUT_WIDTH);
+    optionCField.setPromptText("Enter option C");
+
+    Label optionDLabel = new Label("Option D:");
+    TextField optionDField = new TextField();
+    optionDField.setPrefWidth(INPUT_WIDTH);
+    optionDField.setPromptText("Enter option D");
+
+    // Answer selection using RadioButtons
+    Label answerLabel = new Label("Select Correct Answer:");
+
+    ToggleGroup answerGroup = new ToggleGroup();
+
+    RadioButton answerA = new RadioButton("A");
+    RadioButton answerB = new RadioButton("B");
+    RadioButton answerC = new RadioButton("C");
+    RadioButton answerD = new RadioButton("D");
+
+    answerA.setToggleGroup(answerGroup);
+    answerB.setToggleGroup(answerGroup);
+    answerC.setToggleGroup(answerGroup);
+    answerD.setToggleGroup(answerGroup);
+
+    // Create horizontal box for radio buttons
+    HBox answerBox = new HBox(20, answerA, answerB, answerC, answerD);
+    answerBox.setAlignment(Pos.CENTER);
+
+    // Category selection
+    Label categoryLabel = new Label("Category:");
+    ComboBox<String> categoryCombo = new ComboBox<>();
+    categoryCombo.setPrefWidth(INPUT_WIDTH);
+    categoryCombo.setPromptText("Select a category");
+
+    // Status label for feedback
+    Label statusLabel = new Label("");
+
+    // Load categories from database
+    List<String> categories = db.getAllCategories();
+    if (categories.isEmpty()) {
+      statusLabel.setText("No categories available. Please add categories first.");
+    } else {
+      categoryCombo.getItems().addAll(categories);
     }
+
+    // Buttons
+    Button submitButton = new Button("Submit Question");
+    Button logoutButton = new Button("Logout");
+    Button returnToMenuButton = new Button("Return to Menu");
+
+    // Submit button action
+    submitButton.setOnAction(e -> {
+      String question = questionField.getText().trim();
+      String optionAtext = optionAField.getText().trim();
+      String optionBtext = optionBField.getText().trim();
+      String optionCtext = optionCField.getText().trim();
+      String optionDtext = optionDField.getText().trim();
+      String selectedCategory = categoryCombo.getValue();
+
+      // Validation for text fields
+      if (question.isEmpty() || optionAtext.isEmpty() || optionBtext.isEmpty() ||
+              optionCtext.isEmpty() || optionDtext.isEmpty() || selectedCategory == null) {
+        statusLabel.setText("Please fill in all fields and select a category!");
+        return;
+      }
+
+      // Get selected answer from radio buttons
+      int selectedAnswer = 0;
+      if (answerA.isSelected()) selectedAnswer = 1;
+      else if (answerB.isSelected()) selectedAnswer = 2;
+      else if (answerC.isSelected()) selectedAnswer = 3;
+      else if (answerD.isSelected()) selectedAnswer = 4;
+
+      if (selectedAnswer == 0) {
+        statusLabel.setText("Please select the correct answer (A, B, C, or D)!");
+        return;
+      }
+
+      // Get category ID from category name
+      int categoryId = db.getCategoryId(selectedCategory);
+      if (categoryId == -1) {
+        statusLabel.setText("Invalid category selected!");
+        return;
+      }
+
+      // Get current user ID (you'll need to get the actual logged-in user)
+      // For now, using admin user ID 1 as placeholder
+      int userId = 1; // TODO: Get actual logged-in user ID
+
+      // Insert question into database
+      int questionId = db.insertQuestion(categoryId, question, optionAtext, optionBtext,
+              optionCtext, optionDtext, selectedAnswer, userId);
+
+      if (questionId != -1) {
+        statusLabel.setText("Question submitted successfully!");
+
+        // Clear all fields
+        questionField.clear();
+        optionAField.clear();
+        optionBField.clear();
+        optionCField.clear();
+        optionDField.clear();
+        answerGroup.selectToggle(null);  // Deselect all radio buttons
+        categoryCombo.setValue(null);
+      } else {
+        statusLabel.setText("Failed to submit question. Question may already exist.");
+      }
+    });
+
+    logoutButton.setOnAction(a -> {
+      LogoutMessage();
+      Scene BackScene = Create(SceneType.Login, stage, db);
+      stage.setScene(BackScene);
+    });
+
+    returnToMenuButton.setOnAction(a -> {
+      Scene Adminscene = Create(SceneType.Administrator, stage, db);
+      stage.setScene(Adminscene);
+    });
+
+    // Create container for all input fields
+    VBox inputContainer = new VBox(10,
+            questionLabel, questionField,
+            optionALabel, optionAField,
+            optionBLabel, optionBField,
+            optionCLabel, optionCField,
+            optionDLabel, optionDField,
+            answerLabel, answerBox,
+            categoryLabel, categoryCombo,
+            submitButton,
+            statusLabel,
+            returnToMenuButton, logoutButton
+    );
+
+    inputContainer.setPadding(new Insets(SCENE_PADDING));
+    inputContainer.setAlignment(Pos.CENTER);
+
+    // Wrap in ScrollPane in case content is too tall
+    ScrollPane scrollPane = new ScrollPane(inputContainer);
+    scrollPane.setFitToWidth(true);
+    scrollPane.setPrefHeight(SCENE_HEIGHT);
+
+    return new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
+  }
+
     private static void LogoutMessage () {
       Alert AlertLogout = new Alert(Alert.AlertType.INFORMATION);
       AlertLogout.setTitle("Successfully Logged Out!");
