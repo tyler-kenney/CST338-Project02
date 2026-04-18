@@ -7,11 +7,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 import java.io.*;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,7 +27,17 @@ public interface SceneFactory {
   int INPUT_WIDTH = 200;
 
   //Local variables.
-  String ERROR = "Not a valid input!";
+  String CSS_PATH = "/css/stylesheet.css";
+
+  //Static method for applying CSS to scenes
+  static void applyCSS(Scene scene) {
+    try{
+      String css = SceneFactory.class.getResource(CSS_PATH).toString();
+      scene.getStylesheets().add(css);
+    } catch (Exception e) {
+      System.out.println("Failed to load stylesheet " + e.getMessage());
+    }
+  }
 
   //Static Class for setting up users
   static class User {
@@ -57,6 +63,7 @@ public interface SceneFactory {
       FXMLLoader FXML = new FXMLLoader(SceneFactory.class.getResource("/fxml/Container.fxml"));
 
       Scene scene = new Scene(FXML.load(), SCENE_WIDTH, SCENE_HEIGHT);
+      applyCSS(scene);
       ContainerController containerController = FXML.getController();
       containerController.setStage(stage);
       containerController.setDatabase(db);
@@ -84,69 +91,6 @@ public interface SceneFactory {
     }
   }
 
-  /**
-   * This method displays the stage for creating new account.
-   *
-   * @param stage contains stage
-   * @param db    contains database
-   * @return Scene
-   */
-  private static VBox BuildNewAccount(Stage stage, DatabaseManager db) {
-    Label PromptNewUserName = new Label("Enter New Username: ");
-    Label PromptNewPassword = new Label("Enter New Password: ");
-
-    TextField s2Input1 = new TextField();
-    TextField s2Input2 = new TextField();
-
-    Label s2Output1 = new Label("");
-
-    s2Input1.setPromptText(PromptNewUserName.getText());
-    s2Input1.setPrefWidth(INPUT_WIDTH);
-    s2Input2.setPromptText(PromptNewPassword.getText());
-    s2Input2.setPrefWidth(INPUT_WIDTH);
-    Button PromptNewAccount = new Button("Create Account");
-    CheckBox AdminCheck = new CheckBox("Admin");
-
-    PromptNewAccount.setOnAction(a -> {
-      String username = s2Input1.getText().trim();
-      String password = s2Input2.getText().trim();
-      int role_num;
-      if (AdminCheck.isSelected()) {
-        role_num = 1;
-      } else {
-        role_num = 0;
-      }
-      if (!db.isUsername(username)) {
-        db.insertUserItem(username, password, role_num);
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Account Creation");
-        alert.setHeaderText("Account Created");
-        alert.setContentText("Account Created Successfully!");
-        alert.showAndWait();
-        Scene BackScene = Create(SceneType.Login, stage, db);
-        stage.setScene(BackScene);
-      } else {
-        Alert AlertCreation = new Alert(AlertType.ERROR);
-        AlertCreation.setTitle("Username Error");
-        AlertCreation.setHeaderText("Username Already Exists");
-        AlertCreation.setContentText("Please choose another username");
-        AlertCreation.showAndWait();
-      }
-    });
-    stage.setTitle("Welcome New User");
-    VBox root2 = new VBox(
-            12,
-            PromptNewUserName,
-            s2Input1,
-            PromptNewPassword,
-            s2Input2,
-            AdminCheck,
-            PromptNewAccount,
-            s2Output1);
-    root2.setPadding(new Insets(SCENE_PADDING));
-    root2.setAlignment(Pos.CENTER);
-    return root2;
-  }
     /**
      * This method displays the scene for All user log ins.
      *
@@ -155,18 +99,28 @@ public interface SceneFactory {
      *
      */
     private static VBox BuildUserLogin (Stage stage, DatabaseManager db){
+
       Label PromptUserName = new Label("Username: ");
       Label PromptPassword = new Label("Password: ");
 
-      List<User> users = new ArrayList<>();
+      PromptUserName.getStyleClass().add("Label");
+      PromptPassword.getStyleClass().add("Label");
+
       TextField s1Input1 = new TextField();
       TextField s1Input2 = new TextField();
       s1Input1.setPromptText(PromptUserName.getText());
       s1Input1.setPrefWidth(INPUT_WIDTH);
       s1Input2.setPromptText(PromptPassword.getText());
       s1Input2.setPrefWidth(INPUT_WIDTH);
+
+      s1Input1.getStyleClass().add("TextField");
+      s1Input2.getStyleClass().add("TextField");
+
       Button PromptLogin = new Button("Login");
       Button PromptNewUser = new Button("Create New Account");
+
+      PromptLogin.getStyleClass().add("button");
+      PromptNewUser.getStyleClass().add("button");
 
       PromptNewUser.setOnAction(e -> {
         Scene NewAccount = Create(SceneType.NewUser, stage, db);
@@ -215,6 +169,7 @@ public interface SceneFactory {
               PromptNewUser);
       root.setPadding(new Insets(SCENE_PADDING));
       root.setAlignment(Pos.CENTER);
+      root.getStyleClass().add("vbox");
       // Scene holds the layout and defines the window size
       return root;
     }
@@ -229,6 +184,12 @@ public interface SceneFactory {
       Button DisplayLeaderboard = new Button("Display Leaderboard");
       Button MakeQuestion = new Button("Make Question");
       Button GenerateQuestion = new Button("Generate Questions");
+
+      DisplayLeaderboard.getStyleClass().add("button");
+      MakeQuestion.getStyleClass().add("button");
+      GenerateQuestion.getStyleClass().add("button");
+      Logout.getStyleClass().add("button-logout");
+
       stage.setTitle("Administrator Menu");
 
       DisplayLeaderboard.setOnAction(e -> {
@@ -249,7 +210,7 @@ public interface SceneFactory {
       });
 
       Logout.setOnAction(a -> {
-        LogoutMessage();
+        LogoutMessage("Reg_Logout");
         Scene BackScene = Create(SceneType.Login, stage, db);
         stage.setScene(BackScene);
       });
@@ -262,9 +223,95 @@ public interface SceneFactory {
               Logout);
       root.setPadding(new Insets(SCENE_PADDING));
       root.setAlignment(Pos.CENTER);
+      root.getStyleClass().add("vbox");
       // Scene holds the layout and defines the window size
       return root;
     }
+
+  /**
+   * This method displays the stage for creating new account.
+   *
+   * @param stage contains stage
+   * @param db    contains database
+   * @return Scene
+   */
+  private static VBox BuildNewAccount(Stage stage, DatabaseManager db) {
+    Label PromptNewUserName = new Label("Enter New Username: ");
+    Label PromptNewPassword = new Label("Enter New Password: ");
+    Label s2Output1 = new Label("");
+
+    PromptNewUserName.getStyleClass().add("Label");
+    PromptNewPassword.getStyleClass().add("Label");
+    s2Output1.getStyleClass().add("Label");
+
+    TextField s2Input1 = new TextField();
+    TextField s2Input2 = new TextField();
+
+    s2Input1.getStyleClass().add("TextField");
+    s2Input2.getStyleClass().add("TextField");
+
+    Button PromptNewAccount = new Button("Create Account");
+    PromptNewAccount.getStyleClass().add("button");
+
+    Button returnToMenuButton = new Button("Return to Login");
+    returnToMenuButton.getStyleClass().add("button-logout");
+
+    returnToMenuButton.setOnAction(a -> {
+      LogoutMessage("");
+      Scene BackScene = Create(SceneType.Login, stage, db);
+      stage.setScene(BackScene);
+    });
+
+
+
+    s2Input1.setPromptText(PromptNewUserName.getText());
+    s2Input1.setPrefWidth(INPUT_WIDTH);
+    s2Input2.setPromptText(PromptNewPassword.getText());
+    s2Input2.setPrefWidth(INPUT_WIDTH);
+
+    CheckBox AdminCheck = new CheckBox("Admin");
+
+    PromptNewAccount.setOnAction(a -> {
+      String username = s2Input1.getText().trim();
+      String password = s2Input2.getText().trim();
+      int role_num;
+      if (AdminCheck.isSelected()) {
+        role_num = 1;
+      } else {
+        role_num = 0;
+      }
+      if (!db.isUsername(username)) {
+        db.insertUserItem(username, password, role_num);
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Account Creation");
+        alert.setHeaderText("Account Created");
+        alert.setContentText("Account Created Successfully!");
+        alert.showAndWait();
+        Scene BackScene = Create(SceneType.Login, stage, db);
+        stage.setScene(BackScene);
+      } else {
+        Alert AlertCreation = new Alert(AlertType.ERROR);
+        AlertCreation.setTitle("Username Error");
+        AlertCreation.setHeaderText("Username Already Exists");
+        AlertCreation.setContentText("Please choose another username");
+        AlertCreation.showAndWait();
+      }
+    });
+    stage.setTitle("Welcome New User");
+    VBox root2 = new VBox(
+            12,
+            PromptNewUserName,
+            s2Input1,
+            PromptNewPassword,
+            s2Input2,
+            AdminCheck,
+            PromptNewAccount,
+            s2Output1, returnToMenuButton);
+    root2.setPadding(new Insets(SCENE_PADDING));
+    root2.setAlignment(Pos.CENTER);
+    root2.getStyleClass().add("vbox");
+    return root2;
+  }
 
     /**
      *
@@ -274,6 +321,11 @@ public interface SceneFactory {
     private static VBox BuildGeneralUser (Stage stage, DatabaseManager db){
       Button Logout = new Button("Logout");
       Button DisplayLeaderboard = new Button("Display Leaderboard");
+
+
+      DisplayLeaderboard.getStyleClass().add("button");
+      Logout.getStyleClass().add("button-logout");
+
       stage.setTitle("User Menu");
 
       DisplayLeaderboard.setOnAction(e -> {
@@ -281,10 +333,8 @@ public interface SceneFactory {
         stage.setScene(Leaderboard);
       });
 
-
-
       Logout.setOnAction(a -> {
-        LogoutMessage();
+        LogoutMessage("Reg_Logout");
         Scene BackScene = Create(SceneType.Login, stage, db);
         stage.setScene(BackScene);
       });
@@ -295,6 +345,7 @@ public interface SceneFactory {
                 Logout);
       root.setPadding(new Insets(SCENE_PADDING));
       root.setAlignment(Pos.CENTER);
+      root.getStyleClass().add("vbox");
       // Scene holds the layout and defines the window size
       return root;
     }
@@ -303,8 +354,14 @@ public interface SceneFactory {
       Button Logout = new Button("Logout");
       Button ReturnToMenu = new Button("Return to Menu");
 
+
+      ReturnToMenu.getStyleClass().add("button");
+      Logout.getStyleClass().add("button-logout");
+
+      stage.setTitle("Leaderboard");
+
       Logout.setOnAction(a -> {
-        LogoutMessage();
+        LogoutMessage("Reg_Logout");
         Scene BackScene = Create(SceneType.Login, stage, db);
         stage.setScene(BackScene);
       });
@@ -314,18 +371,24 @@ public interface SceneFactory {
         stage.setScene(Adminscene);
       });
 
+      //TODO: Get Leaderboard.
+
       VBox root = new VBox(12, ReturnToMenu, Logout);
       root.setPadding(new Insets(SCENE_PADDING));
       root.setAlignment(Pos.CENTER);
+      root.getStyleClass().add("vbox");
       return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
     }
 
   private static Scene BuildQuestionGenerator(Stage stage, DatabaseManager db, String QuestionType) {
-    Button logoutButton = new Button("Logout");
+    Button Logout = new Button("Logout");
     Button returnToMenuButton = new Button("Return to Menu");
 
-    logoutButton.setOnAction(e -> {
-      LogoutMessage();
+    returnToMenuButton.getStyleClass().add("button");
+    Logout.getStyleClass().add("button-logout");
+
+    Logout.setOnAction(e -> {
+      LogoutMessage("Reg_Logout");
       Scene BackScene = Create(SceneType.Login, stage, db);
       stage.setScene(BackScene);
     });
@@ -362,8 +425,20 @@ public interface SceneFactory {
       optionDField.setPrefWidth(INPUT_WIDTH);
       optionDField.setPromptText("Enter option D");
 
+      optionALabel.getStyleClass().add("Label");
+      optionBLabel.getStyleClass().add("Label");
+      optionCLabel.getStyleClass().add("Label");
+      optionDLabel.getStyleClass().add("Label");
+
+      optionAField.getStyleClass().add("TextField");
+      optionBField.getStyleClass().add("TextField");
+      optionCField.getStyleClass().add("TextField");
+      optionDField.getStyleClass().add("TextField");
+
       // Answer selection using RadioButtons
       Label answerLabel = new Label("Select Correct Answer:");
+
+      answerLabel.getStyleClass().add("Label");
 
       ToggleGroup answerGroup = new ToggleGroup();
 
@@ -371,6 +446,11 @@ public interface SceneFactory {
       RadioButton answerB = new RadioButton("B");
       RadioButton answerC = new RadioButton("C");
       RadioButton answerD = new RadioButton("D");
+
+      answerA.getStyleClass().add("radio-button");
+      answerB.getStyleClass().add("radio-button");
+      answerC.getStyleClass().add("radio-button");
+      answerD.getStyleClass().add("radio-button");
 
       answerA.setToggleGroup(answerGroup);
       answerB.setToggleGroup(answerGroup);
@@ -380,6 +460,7 @@ public interface SceneFactory {
       // Create horizontal box for radio buttons
       HBox answerBox = new HBox(20, answerA, answerB, answerC, answerD);
       answerBox.setAlignment(Pos.CENTER);
+      answerBox.getStyleClass().add("hbox");
 
       // Category selection
       Label categoryLabel = new Label("Category:");
@@ -470,7 +551,7 @@ public interface SceneFactory {
               categoryLabel, categoryCombo,
               submitButton,
               statusLabel,
-              returnToMenuButton, logoutButton
+              returnToMenuButton, Logout
       );
 
       Container.setPadding(new Insets(SCENE_PADDING));
@@ -481,14 +562,18 @@ public interface SceneFactory {
       scrollPane.setFitToWidth(true);
       scrollPane.setPrefHeight(SCENE_HEIGHT);
 
-      return new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
+      Scene scene = new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
+      applyCSS(scene);
+      return scene;
     }
     if(QuestionType.equals("Generate")) {
       // Category selection
       Label categoryLabel = new Label("Category:");
+      categoryLabel.getStyleClass().add("Label");
       ComboBox<String> categoryCombo = new ComboBox<>();
       categoryCombo.setPrefWidth(INPUT_WIDTH);
       categoryCombo.setPromptText("Select a category");
+      categoryCombo.getStyleClass().add("combo-box");
 
       // Status label for feedback
       Label statusLabel = new Label("");
@@ -497,13 +582,14 @@ public interface SceneFactory {
       List<String> categories = db.getAllCategories();
       if (categories.isEmpty()) {
         statusLabel.setText("No categories available. Please add categories first.");
+        statusLabel.getStyleClass().add("label-status-fail");
       } else {
         categoryCombo.getItems().addAll(categories);
       }
       VBox GenerateButton = new VBox(
               20,
               categoryLabel, categoryCombo, statusLabel,
-              returnToMenuButton, logoutButton
+              returnToMenuButton, Logout
       );
 
       GenerateButton.setPadding(new Insets(SCENE_PADDING));
@@ -513,17 +599,22 @@ public interface SceneFactory {
       ScrollPane scrollPane = new ScrollPane(GenerateButton);
       scrollPane.setFitToWidth(true);
       scrollPane.setPrefHeight(SCENE_HEIGHT);
-
-      return new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
+      Scene Scene = new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
+      applyCSS(Scene);
+      return Scene;
     }
     return null;
   }
 
-    private static void LogoutMessage () {
-      Alert AlertLogout = new Alert(Alert.AlertType.INFORMATION);
-      AlertLogout.setTitle("Successfully Logged Out!");
-      AlertLogout.setHeaderText("Logging Out...");
-      AlertLogout.setContentText("You have successfully logged out");
-      AlertLogout.showAndWait();
+    private static String LogoutMessage (String string) {
+      if(string == "Reg_Logout") {
+        Alert AlertLogout = new Alert(Alert.AlertType.INFORMATION);
+        AlertLogout.setTitle("Successfully Logged Out!");
+        AlertLogout.setHeaderText("Logging Out...");
+        AlertLogout.setContentText("You have successfully logged out");
+        AlertLogout.showAndWait();
+      }
+      return null;
     }
+
 }
