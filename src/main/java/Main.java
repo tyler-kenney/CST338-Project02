@@ -30,7 +30,6 @@ public class Main extends Application {
   @Override
   public void start(Stage stage) {
     Scene scene = SceneFactory.Create(SceneType.Login, stage, db);
-    // text shown in the OS title bar
     stage.setScene(scene);
     stage.show();       // make the window visible
   }
