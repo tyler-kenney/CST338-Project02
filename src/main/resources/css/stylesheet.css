@@ -120,11 +120,7 @@ Logout Buttons: Background - #FF0000  Click - #880808
     -fx-text-fill: #408A71;
 }
 
-/* Question block for batch mode */
-.question-block {
-    -fx-border-color: #bdc3c7;
-    -fx-border-radius: 5px;
-    -fx-padding: 10px;
-    -fx-background-color: #285A48;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);
+.check-box{
+    -fx-background-color: #091413;
+    -fx-text-fill: #ffff;
 }
