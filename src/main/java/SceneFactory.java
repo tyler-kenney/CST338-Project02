@@ -603,9 +603,7 @@ public interface SceneFactory {
       // Number of questions input
       Label numQuestionsLabel = new Label("Number of Questions:");
       numQuestionsLabel.getStyleClass().add("Label");
-      Spinner<Integer> numQuestionsSpinner = new Spinner<>(1, 20, 10);
-      numQuestionsSpinner.setPrefWidth(INPUT_WIDTH);
-      numQuestionsSpinner.getStyleClass().add("spinner");
+
 
       // Status label for feedback
       Label statusLabel = new Label("");
@@ -644,7 +642,7 @@ public interface SceneFactory {
           return;
         }
 
-        int quizSize = Math.min(numQuestionsSpinner.getValue(), questionCount);
+        int quizSize = 6;
 
         // Build and switch to the quiz scene
         Scene quizScene = BuildQuiz(stage, db, categoryId, selectedCategory, quizSize);
@@ -653,7 +651,7 @@ public interface SceneFactory {
 
       VBox GenerateContainer = new VBox(20,
               categoryLabel, categoryCombo,
-              numQuestionsLabel, numQuestionsSpinner,
+              numQuestionsLabel,
               startQuizButton,
               statusLabel,
               returnToMenuButton, Logout
