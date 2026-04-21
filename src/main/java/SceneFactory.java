@@ -11,6 +11,7 @@ import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.sql.ResultSet;
+import java.util.function.Consumer;
 
 /**
  * Running UI for program, Should handle scene switches. Allow user to log in / out. Allow user to
@@ -387,18 +388,79 @@ public interface SceneFactory {
         stage.setScene(BackScene);
       });
 
-      ReturnToMenu.setOnAction(a -> {
-        Scene Adminscene = Create(SceneType.Administrator, stage, db);
-        stage.setScene(Adminscene);
-      });
-
       //TODO: Get Leaderboard.
 
-      VBox root = new VBox(12, ReturnToMenu, Logout);
+      boolean isAdmin =false;
+
+      if(Session.username != null){
+        String password = db.getPassword(Session.username);
+        isAdmin = db.isAdmin(Session.username, password);
+      }
+
+      final boolean adminStatus = isAdmin;
+
+      ReturnToMenu.setOnAction(a -> {
+        if(adminStatus){
+          stage.setScene(Create(SceneType.Administrator, stage, db));
+        } else {
+          stage.setScene(Create(SceneType.General, stage, db));
+        }
+      });
+
+
+      Label Title = new Label("Leaderboard By Category");
+      Title.getStyleClass().add("label-header");
+
+      // Category ComboBox
+      ComboBox<String> categoryCombo = new ComboBox<>();
+      categoryCombo.getItems().addAll(db.getAllCategories());
+      categoryCombo.setPromptText("Select a category");
+      categoryCombo.getStyleClass().add("combo-box");
+
+      // ListView to display results
+      ListView<String> LeaderBoard = new ListView<>();
+      LeaderBoard.setPrefHeight(450);
+
+      // Update leaderboard when category is selected
+      categoryCombo.setOnAction(e -> {
+        String selected = categoryCombo.getValue();
+        if (selected == null) return;
+
+        LeaderBoard.getItems().clear();
+
+        int categoryId = db.getCategoryId(selected);
+        List<Leaderboard> leaders = db.getLeaderboardByCategory(categoryId);
+
+        if (leaders.isEmpty()) {
+          LeaderBoard.getItems().add("No attempts yet for " + selected);
+        } else {
+          for (Leaderboard entry : leaders) {
+            String username = db.getUsernameById(entry.getUser_id());
+            String score = String.format("%.0f", entry.getPoints()) + "/10";
+
+            if (entry.getUser_id() == Session.userId) {
+              LeaderBoard.getItems().add(username + " (You) - " + score);
+            } else {
+              LeaderBoard.getItems().add(username + " - " + score);
+            }
+          }
+        }
+      });
+
+      Button Refresh = new Button("Refresh");
+      Refresh.setOnAction(e -> {
+        categoryCombo.setValue(null);
+        LeaderBoard.getItems().clear();
+        stage.setScene(BuildLeaderboard(stage, db));
+      });
+
+      VBox root = new VBox(15, Title, categoryCombo, LeaderBoard, Refresh, ReturnToMenu, Logout);
       root.setPadding(new Insets(SCENE_PADDING));
       root.setAlignment(Pos.CENTER);
-      root.getStyleClass().add("vbox");
-      return new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+
+      Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+      applyCSS(scene);
+      return scene;
     }
 
   private static Scene BuildQuestionGenerator(Stage stage, DatabaseManager db, String QuestionType) {
@@ -600,11 +662,6 @@ public interface SceneFactory {
       categoryCombo.setPromptText("Select a category");
       categoryCombo.getStyleClass().add("combo-box");
 
-      // Number of questions input
-      Label numQuestionsLabel = new Label("Number of Questions:");
-      numQuestionsLabel.getStyleClass().add("Label");
-
-
       // Status label for feedback
       Label statusLabel = new Label("");
       statusLabel.getStyleClass().add("label-status-fail");
@@ -651,7 +708,6 @@ public interface SceneFactory {
 
       VBox GenerateContainer = new VBox(20,
               categoryLabel, categoryCombo,
-              numQuestionsLabel,
               startQuizButton,
               statusLabel,
               returnToMenuButton, Logout
@@ -688,8 +744,7 @@ public interface SceneFactory {
    */
   private static Scene BuildCategorySelection(Stage stage, DatabaseManager db) {
     Label title = new Label("Select a Category");
-    title.getStyleClass().add("Label");
-    title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+    title.getStyleClass().add("label-header");
 
     ListView<String> categoryList = new ListView<>();
     categoryList.setPrefHeight(150);
@@ -701,7 +756,7 @@ public interface SceneFactory {
     }
 
     Label messageLabel = new Label("");
-    messageLabel.getStyleClass().add("Label");
+    messageLabel.getStyleClass().add("label");
 
     Button startButton = new Button("Start Quiz");
     startButton.getStyleClass().add("button");
@@ -721,6 +776,7 @@ public interface SceneFactory {
 
       if (questionCount == 0) {
         messageLabel.setText("No questions available for " + selected + ". Check back later.");
+        messageLabel.getStyleClass().add("label-status-fail");
         return;
       }
 
@@ -775,8 +831,7 @@ public interface SceneFactory {
    static Scene BuildQuizResults(Stage stage, DatabaseManager db,
                                         int score, int total, String categoryName) {
     Label title = new Label("Quiz Complete!");
-    title.getStyleClass().add("Label");
-    title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
+    title.getStyleClass().add("label-header");
 
     Label categoryLabel = new Label("Category: " + categoryName);
     categoryLabel.getStyleClass().add("Label");

@@ -1,3 +1,5 @@
+import java.sql.PreparedStatement;
+
 /**
  * This class will be used to pass leaderboard info from database to scenefactory.
  *
@@ -19,6 +21,7 @@ public class Leaderboard {
   public int getUser_id() {
     return user_id;
   }
+
   public int getCategory_id() {
     return category_id;
   }
