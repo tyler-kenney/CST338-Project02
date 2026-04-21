@@ -1,6 +1,6 @@
 /* stylesheet.css
 
-Stylesheet for appplication, used to create custom UI.
+Stylesheet for application, used to create custom UI.
 
 Application background: #091413
 TextField background: #ffff
@@ -25,7 +25,7 @@ Logout Buttons: Background - #FF0000  Click - #880808
 .label-header {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
-    -fx-text-fill: #2c3e50;
+    -fx-text-fill: #ffff;
 }
 
 /* TextField styles */

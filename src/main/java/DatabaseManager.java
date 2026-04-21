@@ -668,4 +668,40 @@ public class DatabaseManager {
     }
   }
 
+  //Recieves userID, and returs the username.
+  public String getUsernameById(int userId) {
+    String sql = "SELECT username FROM users WHERE id = ?";
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+      ps.setInt(1, userId);
+      ResultSet rs = ps.executeQuery();
+      if (rs.next()) {
+        return rs.getString("username");
+      }
+    } catch (SQLException e) {
+      System.out.println("getUsernameById failed: " + e.getMessage());
+    }
+    return "Unknown User";
+  }
+
+  //Gets User's max quiz scores for each category.
+  public List<Leaderboard> getLeaderboardByCategory(int categoryId) {
+    List<Leaderboard> leaders = new ArrayList<>();
+    String sql = """
+        SELECT user_id, MAX(score) as score
+        FROM quiz_attempts
+        WHERE category_id = ? AND completed_at IS NOT NULL
+        GROUP BY user_id
+        ORDER BY score DESC
+        """;
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+      ps.setInt(1, categoryId);
+      ResultSet rs = ps.executeQuery();
+      while (rs.next()) {
+        leaders.add(new Leaderboard(rs.getInt("user_id"), categoryId, rs.getDouble("score")));
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return leaders;
+  }
 }
