@@ -540,7 +540,11 @@ public interface SceneFactory {
 
         // Get current user ID (you'll need to get the actual logged-in user)
         // For now, using admin user ID 1 as placeholder
-        int userId = 1; // TODO: Get actual logged-in user ID
+        int userId = Session.userId;
+        if(userId == -1) {
+          statusLabel.setText("Error: Not logged in!");
+          return;
+        }
 
         // Insert question into database
         int questionId = db.insertQuestion(categoryId, question, optionAtext, optionBtext,
@@ -596,8 +600,16 @@ public interface SceneFactory {
       categoryCombo.setPromptText("Select a category");
       categoryCombo.getStyleClass().add("combo-box");
 
+      // Number of questions input
+      Label numQuestionsLabel = new Label("Number of Questions:");
+      numQuestionsLabel.getStyleClass().add("Label");
+      Spinner<Integer> numQuestionsSpinner = new Spinner<>(1, 20, 10);
+      numQuestionsSpinner.setPrefWidth(INPUT_WIDTH);
+      numQuestionsSpinner.getStyleClass().add("spinner");
+
       // Status label for feedback
       Label statusLabel = new Label("");
+      statusLabel.getStyleClass().add("label-status-fail");
 
       // Load categories from database
       List<String> categories = db.getAllCategories();
@@ -607,22 +619,57 @@ public interface SceneFactory {
       } else {
         categoryCombo.getItems().addAll(categories);
       }
-      VBox GenerateButton = new VBox(
-              20,
-              categoryLabel, categoryCombo, statusLabel,
+
+      Button startQuizButton = new Button("Start Quiz");
+      startQuizButton.getStyleClass().add("button");
+
+      startQuizButton.setOnAction(e -> {
+        String selectedCategory = categoryCombo.getValue();
+        if (selectedCategory == null) {
+          statusLabel.setText("Please select a category!");
+          return;
+        }
+
+        int categoryId = db.getCategoryId(selectedCategory);
+        if (categoryId == -1) {
+          statusLabel.setText("Invalid category!");
+          statusLabel.getStyleClass().add("label-status-fail");
+          return;
+        }
+
+        int questionCount = db.getQuestionCount(categoryId);
+        if (questionCount == 0) {
+          statusLabel.setText("No questions available in " + selectedCategory);
+          statusLabel.getStyleClass().add("label-status-fail");
+          return;
+        }
+
+        int quizSize = Math.min(numQuestionsSpinner.getValue(), questionCount);
+
+        // Build and switch to the quiz scene
+        Scene quizScene = BuildQuiz(stage, db, categoryId, selectedCategory, quizSize);
+        stage.setScene(quizScene);
+      });
+
+      VBox GenerateContainer = new VBox(20,
+              categoryLabel, categoryCombo,
+              numQuestionsLabel, numQuestionsSpinner,
+              startQuizButton,
+              statusLabel,
               returnToMenuButton, Logout
       );
 
-      GenerateButton.setPadding(new Insets(SCENE_PADDING));
-      GenerateButton.setAlignment(Pos.CENTER);
+      GenerateContainer.setPadding(new Insets(SCENE_PADDING));
+      GenerateContainer.setAlignment(Pos.CENTER);
 
-      // Wrap in ScrollPane in case content is too tall
-      ScrollPane scrollPane = new ScrollPane(GenerateButton);
+      ScrollPane scrollPane = new ScrollPane(GenerateContainer);
       scrollPane.setFitToWidth(true);
       scrollPane.setPrefHeight(SCENE_HEIGHT);
-      Scene Scene = new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
-      applyCSS(Scene);
-      return Scene;
+      scrollPane.getStyleClass().add("scroll-pane");
+
+      Scene scene = new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
+      applyCSS(scene);
+      return scene;
     }
     return null;
   }

@@ -86,7 +86,7 @@ Logout Buttons: Background - #FF0000  Click - #880808
 
 /* ComboBox styles */
 .combo-box {
-    -fx-background-color: #091413;
+    -fx-background-color: #ffff;
     -fx-border-color: #285A48;
     -fx-border-radius: 3px;
 }
