@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" spacing="15"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="QuizController"
+      styleClass="vbox">
+
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <Label fx:id="categoryTitle" text="Quiz"
+           styleClass="Label"
+           style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+
+    <Label fx:id="progressLabel" text="Question 1 of 10"
+           styleClass="Label"/>
+
+    <Label fx:id="questionLabel" text=""
+           styleClass="Label"
+           wrapText="true"
+           style="-fx-font-size: 16px;"/>
+
+    <VBox fx:id="optionsBox" spacing="10" alignment="CENTER_LEFT">
+        <padding>
+            <Insets top="10" right="50" bottom="10" left="50"/>
+        </padding>
+        <RadioButton fx:id="optA" styleClass="radio-button"/>
+        <RadioButton fx:id="optB" styleClass="radio-button"/>
+        <RadioButton fx:id="optC" styleClass="radio-button"/>
+        <RadioButton fx:id="optD" styleClass="radio-button"/>
+    </VBox>
+
+    <Label fx:id="feedbackLabel" text="" styleClass="Label"/>
+
+    <Button fx:id="nextButton" text="Next"
+            styleClass="button"
+            onAction="#handleNext"/>
+
+</VBox>

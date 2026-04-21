@@ -9,6 +9,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.io.*;
 import java.util.List;
+import java.util.ArrayList;
+import java.sql.ResultSet;
 
 /**
  * Running UI for program, Should handle scene switches. Allow user to log in / out. Allow user to
@@ -25,6 +27,11 @@ public interface SceneFactory {
   int SCENE_HEIGHT = 800;
   int SCENE_PADDING = 30;
   int INPUT_WIDTH = 200;
+
+  static class Session {
+    static String username = null;
+    static int userId = -1;
+  }
 
   //Local variables.
   String CSS_PATH = "/css/stylesheet.css";
@@ -132,6 +139,10 @@ public interface SceneFactory {
         String password = s1Input2.getText().trim();
 
         if (db.isUsername(username) && db.isPassword(username, password)) {
+
+          Session.username = username;
+          Session.userId = db.getUserId(username);
+
           if (db.isAdmin(username, password)) {
             User currentUser = new User(username, password, "Administrator");
             Alert Alert = new Alert(AlertType.INFORMATION);
@@ -339,10 +350,20 @@ public interface SceneFactory {
         stage.setScene(BackScene);
       });
 
+      Button TakeQuiz = new Button("Take Quiz");
+      TakeQuiz.getStyleClass().add("button");
+
+      TakeQuiz.setOnAction(e -> {
+        Scene quizSetup = BuildCategorySelection(stage, db);
+        stage.setScene(quizSetup);
+      });
+
       VBox root = new
               VBox(
-                12,
-                Logout);
+              12,
+              TakeQuiz,
+              DisplayLeaderboard,
+              Logout);
       root.setPadding(new Insets(SCENE_PADDING));
       root.setAlignment(Pos.CENTER);
       root.getStyleClass().add("vbox");
@@ -616,5 +637,155 @@ public interface SceneFactory {
       }
       return null;
     }
+
+  /**
+   * Quiz Category Selection
+   */
+  private static Scene BuildCategorySelection(Stage stage, DatabaseManager db) {
+    Label title = new Label("Select a Category");
+    title.getStyleClass().add("Label");
+    title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+    ListView<String> categoryList = new ListView<>();
+    categoryList.setPrefHeight(150);
+    categoryList.setPrefWidth(300);
+
+    List<String> categories = db.getAllCategories();
+    if (!categories.isEmpty()) {
+      categoryList.getItems().addAll(categories);
+    }
+
+    Label messageLabel = new Label("");
+    messageLabel.getStyleClass().add("Label");
+
+    Button startButton = new Button("Start Quiz");
+    startButton.getStyleClass().add("button");
+
+    Button returnButton = new Button("Return to Menu");
+    returnButton.getStyleClass().add("button-logout");
+
+    startButton.setOnAction(e -> {
+      String selected = categoryList.getSelectionModel().getSelectedItem();
+      if (selected == null) {
+        messageLabel.setText("Please select a category.");
+        return;
+      }
+
+      int categoryId = db.getCategoryId(selected);
+      int questionCount = db.getQuestionCount(categoryId);
+
+      if (questionCount == 0) {
+        messageLabel.setText("No questions available for " + selected + ". Check back later.");
+        return;
+      }
+
+      int quizSize = Math.min(questionCount, 10);
+
+      Scene quizScene = BuildQuiz(stage, db, categoryId, selected, quizSize);
+      stage.setScene(quizScene);
+    });
+
+    returnButton.setOnAction(e -> {
+      Scene menu = Create(SceneType.General, stage, db);
+      stage.setScene(menu);
+    });
+
+    VBox root = new VBox(15, title, categoryList, startButton, messageLabel, returnButton);
+    root.setPadding(new Insets(SCENE_PADDING));
+    root.setAlignment(Pos.CENTER);
+    root.getStyleClass().add("vbox");
+
+    Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+    applyCSS(scene);
+    return scene;
+  }
+
+  /**
+   * Load Quix.fxml and starts the quiz.
+   */
+  static Scene BuildQuiz(Stage stage, DatabaseManager db,
+                         int categoryId, String categoryName, int quizSize) {
+    try {
+      FXMLLoader loader = new FXMLLoader(SceneFactory.class.getResource("/fxml/Quiz.fxml"));
+      ScrollPane scrollPane = new ScrollPane(loader.load());
+      scrollPane.setFitToWidth(true);
+      scrollPane.setPrefHeight(SCENE_HEIGHT);
+
+      QuizController controller = loader.getController();
+      controller.setDependencies(db, stage);
+      controller.startQuiz(categoryId, categoryName, quizSize);
+
+      Scene scene = new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
+      applyCSS(scene);
+      return scene;
+    } catch (IOException e) {
+      System.out.println("Failed to load Quiz.fxml: " + e.getMessage());
+      return BuildCategorySelection(stage, db);
+    }
+  }
+
+  /**
+   * Display Quiz Results
+   */
+   static Scene BuildQuizResults(Stage stage, DatabaseManager db,
+                                        int score, int total, String categoryName) {
+    Label title = new Label("Quiz Complete!");
+    title.getStyleClass().add("Label");
+    title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
+
+    Label categoryLabel = new Label("Category: " + categoryName);
+    categoryLabel.getStyleClass().add("Label");
+
+    Label scoreLabel = new Label("Score: " + score + " / " + total);
+    scoreLabel.getStyleClass().add("Label");
+    scoreLabel.setStyle("-fx-font-size: 18px;");
+
+    Label correctLabel = new Label("Correct: " + score);
+    correctLabel.getStyleClass().add("Label");
+
+    Label incorrectLabel = new Label("Incorrect: " + (total - score));
+    incorrectLabel.getStyleClass().add("Label");
+
+    // Percentage
+    int percentage = (int) Math.round((double) score / total * 100);
+    Label percentLabel = new Label(percentage + "%");
+    percentLabel.getStyleClass().add("Label");
+    percentLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold;");
+
+    Button retryButton = new Button("Try Again");
+    retryButton.getStyleClass().add("button");
+
+    Button menuButton = new Button("Return to Menu");
+    menuButton.getStyleClass().add("button");
+
+    Button leaderboardButton = new Button("View Leaderboard");
+    leaderboardButton.getStyleClass().add("button");
+
+    retryButton.setOnAction(e -> {
+      Scene categoryScene = BuildCategorySelection(stage, db);
+      stage.setScene(categoryScene);
+    });
+
+    menuButton.setOnAction(e -> {
+      Scene menu = Create(SceneType.General, stage, db);
+      stage.setScene(menu);
+    });
+
+    leaderboardButton.setOnAction(e -> {
+      Scene leaderboard = Create(SceneType.Leaderboard, stage, db);
+      stage.setScene(leaderboard);
+    });
+
+    VBox root = new VBox(15, title, categoryLabel, percentLabel,
+            scoreLabel, correctLabel, incorrectLabel,
+            retryButton, leaderboardButton, menuButton);
+    root.setPadding(new Insets(SCENE_PADDING));
+    root.setAlignment(Pos.CENTER);
+    root.getStyleClass().add("vbox");
+
+    Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+    applyCSS(scene);
+    return scene;
+  }
 
 }
