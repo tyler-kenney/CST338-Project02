@@ -107,10 +107,12 @@ public interface SceneFactory {
      *
      */
     private static VBox BuildUserLogin (Stage stage, DatabaseManager db){
-
+      Label Welcome = new Label("Welcome to Otter CS Trivia\n\n");
       Label PromptUserName = new Label("Username: ");
       Label PromptPassword = new Label("Password: ");
 
+      Welcome.getStyleClass().add("label-header");
+      Welcome.setAlignment(Pos.CENTER);
       PromptUserName.getStyleClass().add("Label");
       PromptPassword.getStyleClass().add("Label");
 
@@ -172,7 +174,7 @@ public interface SceneFactory {
       stage.setTitle("Welcome");
       VBox root = new
               VBox(
-              12,
+              12, Welcome,
               PromptUserName,
               s1Input1,
               PromptPassword,
@@ -185,6 +187,90 @@ public interface SceneFactory {
       // Scene holds the layout and defines the window size
       return root;
     }
+
+  /**
+   * This method displays the stage for creating new account.
+   *
+   * @param stage contains stage
+   * @param db    contains database
+   * @return Scene
+   */
+  private static VBox BuildNewAccount(Stage stage, DatabaseManager db) {
+    Label PromptNewUserName = new Label("Enter New Username: ");
+    Label PromptNewPassword = new Label("Enter New Password: ");
+    Label s2Output1 = new Label("");
+
+    PromptNewUserName.getStyleClass().add("Label");
+    PromptNewPassword.getStyleClass().add("Label");
+    s2Output1.getStyleClass().add("Label");
+
+    TextField s2Input1 = new TextField();
+    TextField s2Input2 = new TextField();
+
+    s2Input1.getStyleClass().add("TextField");
+    s2Input2.getStyleClass().add("TextField");
+
+    Button PromptNewAccount = new Button("Create Account");
+    PromptNewAccount.getStyleClass().add("button");
+
+    Button returnToMenuButton = new Button("Return to Login");
+    returnToMenuButton.getStyleClass().add("button-logout");
+
+    returnToMenuButton.setOnAction(a -> {
+      LogoutMessage("");
+      Scene BackScene = Create(SceneType.Login, stage, db);
+      stage.setScene(BackScene);
+    });
+
+    s2Input1.setPromptText(PromptNewUserName.getText());
+    s2Input1.setPrefWidth(INPUT_WIDTH);
+    s2Input2.setPromptText(PromptNewPassword.getText());
+    s2Input2.setPrefWidth(INPUT_WIDTH);
+
+    CheckBox AdminCheck = new CheckBox("Admin");
+    AdminCheck.getStyleClass().add("checkbox");
+
+    PromptNewAccount.setOnAction(a -> {
+      String username = s2Input1.getText().trim();
+      String password = s2Input2.getText().trim();
+      int role_num;
+      if (AdminCheck.isSelected()) {
+        role_num = 1;
+      } else {
+        role_num = 0;
+      }
+      if (!db.isUsername(username)) {
+        db.insertUserItem(username, password, role_num);
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Account Creation");
+        alert.setHeaderText("Account Created");
+        alert.setContentText("Account Created Successfully!");
+        alert.showAndWait();
+        Scene BackScene = Create(SceneType.Login, stage, db);
+        stage.setScene(BackScene);
+      } else {
+        Alert AlertCreation = new Alert(AlertType.ERROR);
+        AlertCreation.setTitle("Username Error");
+        AlertCreation.setHeaderText("Username Already Exists");
+        AlertCreation.setContentText("Please choose another username");
+        AlertCreation.showAndWait();
+      }
+    });
+    stage.setTitle("Welcome New User");
+    VBox root2 = new VBox(
+            12,
+            PromptNewUserName,
+            s2Input1,
+            PromptNewPassword,
+            s2Input2,
+            AdminCheck,
+            PromptNewAccount,
+            s2Output1, returnToMenuButton);
+    root2.setPadding(new Insets(SCENE_PADDING));
+    root2.setAlignment(Pos.CENTER);
+    root2.getStyleClass().add("vbox");
+    return root2;
+  }
 
     /**
      *
@@ -240,91 +326,6 @@ public interface SceneFactory {
       return root;
     }
 
-  /**
-   * This method displays the stage for creating new account.
-   *
-   * @param stage contains stage
-   * @param db    contains database
-   * @return Scene
-   */
-  private static VBox BuildNewAccount(Stage stage, DatabaseManager db) {
-    Label PromptNewUserName = new Label("Enter New Username: ");
-    Label PromptNewPassword = new Label("Enter New Password: ");
-    Label s2Output1 = new Label("");
-
-    PromptNewUserName.getStyleClass().add("Label");
-    PromptNewPassword.getStyleClass().add("Label");
-    s2Output1.getStyleClass().add("Label");
-
-    TextField s2Input1 = new TextField();
-    TextField s2Input2 = new TextField();
-
-    s2Input1.getStyleClass().add("TextField");
-    s2Input2.getStyleClass().add("TextField");
-
-    Button PromptNewAccount = new Button("Create Account");
-    PromptNewAccount.getStyleClass().add("button");
-
-    Button returnToMenuButton = new Button("Return to Login");
-    returnToMenuButton.getStyleClass().add("button-logout");
-
-    returnToMenuButton.setOnAction(a -> {
-      LogoutMessage("");
-      Scene BackScene = Create(SceneType.Login, stage, db);
-      stage.setScene(BackScene);
-    });
-
-
-
-    s2Input1.setPromptText(PromptNewUserName.getText());
-    s2Input1.setPrefWidth(INPUT_WIDTH);
-    s2Input2.setPromptText(PromptNewPassword.getText());
-    s2Input2.setPrefWidth(INPUT_WIDTH);
-
-    CheckBox AdminCheck = new CheckBox("Admin");
-
-    PromptNewAccount.setOnAction(a -> {
-      String username = s2Input1.getText().trim();
-      String password = s2Input2.getText().trim();
-      int role_num;
-      if (AdminCheck.isSelected()) {
-        role_num = 1;
-      } else {
-        role_num = 0;
-      }
-      if (!db.isUsername(username)) {
-        db.insertUserItem(username, password, role_num);
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle("Account Creation");
-        alert.setHeaderText("Account Created");
-        alert.setContentText("Account Created Successfully!");
-        alert.showAndWait();
-        Scene BackScene = Create(SceneType.Login, stage, db);
-        stage.setScene(BackScene);
-      } else {
-        Alert AlertCreation = new Alert(AlertType.ERROR);
-        AlertCreation.setTitle("Username Error");
-        AlertCreation.setHeaderText("Username Already Exists");
-        AlertCreation.setContentText("Please choose another username");
-        AlertCreation.showAndWait();
-      }
-    });
-    stage.setTitle("Welcome New User");
-    VBox root2 = new VBox(
-            12,
-            PromptNewUserName,
-            s2Input1,
-            PromptNewPassword,
-            s2Input2,
-            AdminCheck,
-            PromptNewAccount,
-            s2Output1, returnToMenuButton);
-    root2.setPadding(new Insets(SCENE_PADDING));
-    root2.setAlignment(Pos.CENTER);
-    root2.getStyleClass().add("vbox");
-    return root2;
-  }
-
     /**
      *
      * @param stage BuildGeneralUser, builds admin page.
@@ -333,7 +334,6 @@ public interface SceneFactory {
     private static VBox BuildGeneralUser (Stage stage, DatabaseManager db){
       Button Logout = new Button("Logout");
       Button DisplayLeaderboard = new Button("Display Leaderboard");
-
 
       DisplayLeaderboard.getStyleClass().add("button");
       Logout.getStyleClass().add("button-logout");
@@ -355,8 +355,9 @@ public interface SceneFactory {
       TakeQuiz.getStyleClass().add("button");
 
       TakeQuiz.setOnAction(e -> {
-        Scene quizSetup = BuildCategorySelection(stage, db);
-        stage.setScene(quizSetup);
+        String QuestionType = "Generate";
+        Scene CreateQuestion = BuildQuestionGenerator(stage, db, QuestionType);
+        stage.setScene(CreateQuestion);
       });
 
       VBox root = new
@@ -387,8 +388,6 @@ public interface SceneFactory {
         Scene BackScene = Create(SceneType.Login, stage, db);
         stage.setScene(BackScene);
       });
-
-      //TODO: Get Leaderboard.
 
       boolean isAdmin =false;
 
@@ -464,10 +463,19 @@ public interface SceneFactory {
     }
 
   private static Scene BuildQuestionGenerator(Stage stage, DatabaseManager db, String QuestionType) {
-    Button Logout = new Button("Logout");
-    Button returnToMenuButton = new Button("Return to Menu");
+    boolean isAdmin =false;
 
-    returnToMenuButton.getStyleClass().add("button");
+    if(Session.username != null){
+      String password = db.getPassword(Session.username);
+      isAdmin = db.isAdmin(Session.username, password);
+    }
+
+    final boolean adminStatus = isAdmin;
+
+    Button Logout = new Button("Logout");
+    Button ReturnToMenu = new Button("Return to Menu");
+
+    ReturnToMenu.getStyleClass().add("button");
     Logout.getStyleClass().add("button-logout");
 
     Logout.setOnAction(e -> {
@@ -476,9 +484,12 @@ public interface SceneFactory {
       stage.setScene(BackScene);
     });
 
-    returnToMenuButton.setOnAction(e -> {
-      Scene Adminscene = Create(SceneType.Administrator, stage, db);
-      stage.setScene(Adminscene);
+    ReturnToMenu.setOnAction(a -> {
+      if(adminStatus){
+        stage.setScene(Create(SceneType.Administrator, stage, db));
+      } else {
+        stage.setScene(Create(SceneType.General, stage, db));
+      }
     });
 
     if(QuestionType.equals("Create")){
@@ -638,7 +649,7 @@ public interface SceneFactory {
               categoryLabel, categoryCombo,
               submitButton,
               statusLabel,
-              returnToMenuButton, Logout
+              ReturnToMenu, Logout
       );
 
       Container.setPadding(new Insets(SCENE_PADDING));
@@ -710,7 +721,7 @@ public interface SceneFactory {
               categoryLabel, categoryCombo,
               startQuizButton,
               statusLabel,
-              returnToMenuButton, Logout
+              ReturnToMenu, Logout
       );
 
       GenerateContainer.setPadding(new Insets(SCENE_PADDING));
