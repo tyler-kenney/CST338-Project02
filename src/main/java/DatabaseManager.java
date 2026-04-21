@@ -562,4 +562,110 @@ public class DatabaseManager {
     return categories;
   }
 
+  /** Delete a question by ID. */
+  public boolean deleteQuestion(int id) {
+    String sql = "DELETE FROM questions WHERE id = ?";
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+      ps.setInt(1, id);
+      return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+      System.out.println("deleteQuestion failed: " + e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Start a new quiz session. Returns the session ID.
+   * Call when user picks a category and begins a quiz.
+   * completed_at stays NULL until completeQuizAttempt() is called.
+   */
+  public int createQuizAttempt(int userId, int categoryId, int totalQuestions) {
+    String sql = "INSERT INTO quiz_attempts (user_id, category_id, total_questions) VALUES (?, ?, ?)";
+    try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+      ps.setInt(1, userId);
+      ps.setInt(2, categoryId);
+      ps.setInt(3, totalQuestions);
+      ps.executeUpdate();
+      ResultSet keys = ps.getGeneratedKeys();
+      if (keys.next()) return keys.getInt(1);
+    } catch (SQLException e) {
+      System.out.println("createQuizAttempt failed: " + e.getMessage());
+    }
+    return -1;
+  }
+
+  /**
+   * Finish a quiz session with the final score.
+   * Sets completed_at to now so we know it's done.
+   */
+  public boolean completeQuizAttempt(int attemptId, int score) {
+    String sql = "UPDATE quiz_attempts SET score = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+      ps.setInt(1, score);
+      ps.setInt(2, attemptId);
+      return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+      System.out.println("completeQuizAttempt failed: " + e.getMessage());
+      return false;
+    }
+  }
+
+  /** Delete a quiz session by ID. */
+  public boolean deleteQuizAttempt(int attemptId) {
+    String sql = "DELETE FROM quiz_attempts WHERE id = ?";
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+      ps.setInt(1, attemptId);
+      return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+      System.out.println("deleteQuizAttempt failed: " + e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Record one answer within a quiz session.
+   * selectedOption: 1=A, 2=B, 3=C, 4=D (matches questions.answer format).
+   */
+  public int insertQuestionAttempt(int attemptId, int questionId,
+                                   int selectedOption, boolean isCorrect) {
+    String sql = "INSERT INTO question_attempts (attempt_id, question_id, selected_option, is_correct) VALUES (?, ?, ?, ?)";
+    try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+      ps.setInt(1, attemptId);
+      ps.setInt(2, questionId);
+      ps.setInt(3, selectedOption);
+      ps.setInt(4, isCorrect ? 1 : 0);
+      ps.executeUpdate();
+      ResultSet keys = ps.getGeneratedKeys();
+      if (keys.next()) return keys.getInt(1);
+    } catch (SQLException e) {
+      System.out.println("insertQuestionAttempt failed: " + e.getMessage());
+    }
+    return -1;
+  }
+
+  /** Count how many questions the user got right in a session. */
+  public int getCorrectCount(int attemptId) {
+    String sql = "SELECT COUNT(*) FROM question_attempts WHERE attempt_id = ? AND is_correct = 1";
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+      ps.setInt(1, attemptId);
+      ResultSet rs = ps.executeQuery();
+      if (rs.next()) return rs.getInt(1);
+    } catch (SQLException e) {
+      System.out.println("getCorrectCount failed: " + e.getMessage());
+    }
+    return 0;
+  }
+
+  /** Delete all question attempts for a session. */
+  public boolean deleteQuestionAttempts(int attemptId) {
+    String sql = "DELETE FROM question_attempts WHERE attempt_id = ?";
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+      ps.setInt(1, attemptId);
+      return ps.executeUpdate() >= 0;
+    } catch (SQLException e) {
+      System.out.println("deleteQuestionAttempts failed: " + e.getMessage());
+      return false;
+    }
+  }
+
 }
