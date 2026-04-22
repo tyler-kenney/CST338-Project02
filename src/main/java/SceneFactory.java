@@ -420,6 +420,23 @@ public interface SceneFactory {
       ListView<String> LeaderBoard = new ListView<>();
       LeaderBoard.setPrefHeight(450);
 
+      // Highlight the logged-in user's row
+      LeaderBoard.setCellFactory(lv -> new ListCell<String>() {
+        @Override
+        protected void updateItem(String item, boolean empty) {
+          super.updateItem(item, empty);
+          getStyleClass().remove("leaderboard-you");
+          if (empty || item == null) {
+            setText(null);
+          } else {
+            setText(item);
+            if (item.contains("(You)")) {
+              getStyleClass().add("leaderboard-you");
+            }
+          }
+        }
+      });
+
       // Update leaderboard when category is selected
       categoryCombo.setOnAction(e -> {
         String selected = categoryCombo.getValue();
