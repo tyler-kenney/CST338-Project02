@@ -124,3 +124,17 @@ Logout Buttons: Background - #FF0000  Click - #880808
     -fx-background-color: #091413;
     -fx-text-fill: #ffff;
 }
+
+/* Highlight user logged in row leaderboard */
+.leaderboard-you {
+    -fx-background-color: #408A71;
+    -fx-text-fill: #ffff;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent transparent transparent #ADADAD;
+    -fx-border-width: 0 0 0 4px;
+}
+
+.leaderboard-you:selected {
+    -fx-background-color: #285A48;
+    -fx-text-fill: #ffff;
+}
