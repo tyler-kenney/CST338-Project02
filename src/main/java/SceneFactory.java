@@ -1,3 +1,5 @@
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -416,8 +418,9 @@ public interface SceneFactory {
       categoryCombo.setPromptText("Select a category");
       categoryCombo.getStyleClass().add("combo-box");
 
+      ObservableList<String> LeaderBoardData = FXCollections.observableArrayList();
       // ListView to display results
-      ListView<String> LeaderBoard = new ListView<>();
+      ListView<String> LeaderBoard = new ListView<>(LeaderBoardData);
       LeaderBoard.setPrefHeight(450);
 
       // Highlight the logged-in user's row
@@ -442,22 +445,22 @@ public interface SceneFactory {
         String selected = categoryCombo.getValue();
         if (selected == null) return;
 
-        LeaderBoard.getItems().clear();
+        LeaderBoardData.clear();
 
         int categoryId = db.getCategoryId(selected);
         List<Leaderboard> leaders = db.getLeaderboardByCategory(categoryId);
 
         if (leaders.isEmpty()) {
-          LeaderBoard.getItems().add("No attempts yet for " + selected);
+          LeaderBoardData.add("No attempts yet for " + selected);
         } else {
           for (Leaderboard entry : leaders) {
             String username = db.getUsernameById(entry.getUser_id());
             String score = String.format("%.0f", entry.getPoints()) + "/10";
 
             if (entry.getUser_id() == Session.userId) {
-              LeaderBoard.getItems().add(username + " (You) - " + score);
+              LeaderBoardData.add(username + " (You) - " + score);
             } else {
-              LeaderBoard.getItems().add(username + " - " + score);
+              LeaderBoardData.add(username + " - " + score);
             }
           }
         }
@@ -466,7 +469,7 @@ public interface SceneFactory {
       Button Refresh = new Button("Refresh");
       Refresh.setOnAction(e -> {
         categoryCombo.setValue(null);
-        LeaderBoard.getItems().clear();
+        LeaderBoardData.clear();
         stage.setScene(BuildLeaderboard(stage, db));
       });
 
