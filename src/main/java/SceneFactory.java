@@ -466,14 +466,7 @@ public interface SceneFactory {
         }
       });
 
-      Button Refresh = new Button("Refresh");
-      Refresh.setOnAction(e -> {
-        categoryCombo.setValue(null);
-        LeaderBoardData.clear();
-        stage.setScene(BuildLeaderboard(stage, db));
-      });
-
-      VBox root = new VBox(15, Title, categoryCombo, LeaderBoard, Refresh, ReturnToMenu, Logout);
+      VBox root = new VBox(15, Title, categoryCombo, LeaderBoard, ReturnToMenu, Logout);
       root.setPadding(new Insets(SCENE_PADDING));
       root.setAlignment(Pos.CENTER);
 
