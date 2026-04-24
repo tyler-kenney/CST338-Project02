@@ -298,9 +298,8 @@ public interface SceneFactory {
       });
 
       GenerateQuestion.setOnAction(e -> {
-        String QuestionType = "Generate";
-        Scene CreateQuestion = BuildQuestionGenerator(stage, db, QuestionType);
-        stage.setScene(CreateQuestion);
+        Scene categoryScene = BuildCategorySelection(stage, db);
+        stage.setScene(categoryScene);
       });
 
       MakeQuestion.setOnAction(e -> {
@@ -357,9 +356,8 @@ public interface SceneFactory {
       TakeQuiz.getStyleClass().add("button");
 
       TakeQuiz.setOnAction(e -> {
-        String QuestionType = "Generate";
-        Scene CreateQuestion = BuildQuestionGenerator(stage, db, QuestionType);
-        stage.setScene(CreateQuestion);
+        Scene categoryScene = BuildCategorySelection(stage, db);
+        stage.setScene(categoryScene);
       });
 
       VBox root = new
@@ -624,8 +622,7 @@ public interface SceneFactory {
           return;
         }
 
-        // Get current user ID (you'll need to get the actual logged-in user)
-        // For now, using admin user ID 1 as placeholder
+        // Get current user ID
         int userId = Session.userId;
         if(userId == -1) {
           statusLabel.setText("Error: Not logged in!");
@@ -637,16 +634,39 @@ public interface SceneFactory {
                 optionCtext, optionDtext, selectedAnswer, userId);
 
         if (questionId != -1) {
-          statusLabel.setText("Question submitted successfully!");
+          // Success! Ask if user wants to create another question
+          Alert successAlert = new Alert(Alert.AlertType.CONFIRMATION);
+          successAlert.setTitle("Question Submitted");
+          successAlert.setHeaderText("Question added successfully!");
+          successAlert.setContentText("Would you like to create another question?");
 
-          // Clear all fields
-          questionField.clear();
-          optionAField.clear();
-          optionBField.clear();
-          optionCField.clear();
-          optionDField.clear();
-          answerGroup.selectToggle(null);  // Deselect all radio buttons
-          categoryCombo.setValue(null);
+          // Add Yes and No buttons
+          ButtonType yesButton = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+          ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.NO);
+          successAlert.getButtonTypes().setAll(yesButton, noButton);
+
+          // Wait for user response
+          java.util.Optional<ButtonType> result = successAlert.showAndWait();
+
+          if (result.isPresent() && result.get() == yesButton) {
+            // User wants to create another question - clear the form
+            questionField.clear();
+            optionAField.clear();
+            optionBField.clear();
+            optionCField.clear();
+            optionDField.clear();
+            answerGroup.selectToggle(null);
+            categoryCombo.setValue(null);
+            statusLabel.setText(""); // Clear any previous status message
+            questionField.requestFocus(); // Put cursor back in question field
+          } else {
+            // User wants to return to menu
+            if (adminStatus) {
+              stage.setScene(Create(SceneType.Administrator, stage, db));
+            } else {
+              stage.setScene(Create(SceneType.General, stage, db));
+            }
+          }
         } else {
           statusLabel.setText("Failed to submit question. Question may already exist.");
         }
@@ -672,78 +692,6 @@ public interface SceneFactory {
       ScrollPane scrollPane = new ScrollPane(Container);
       scrollPane.setFitToWidth(true);
       scrollPane.setPrefHeight(SCENE_HEIGHT);
-
-      Scene scene = new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
-      applyCSS(scene);
-      return scene;
-    }
-    if(QuestionType.equals("Generate")) {
-      // Category selection
-      Label categoryLabel = new Label("Category:");
-      categoryLabel.getStyleClass().add("Label");
-      ComboBox<String> categoryCombo = new ComboBox<>();
-      categoryCombo.setPrefWidth(INPUT_WIDTH);
-      categoryCombo.setPromptText("Select a category");
-      categoryCombo.getStyleClass().add("combo-box");
-
-      // Status label for feedback
-      Label statusLabel = new Label("");
-      statusLabel.getStyleClass().add("label-status-fail");
-
-      // Load categories from database
-      List<String> categories = db.getAllCategories();
-      if (categories.isEmpty()) {
-        statusLabel.setText("No categories available. Please add categories first.");
-        statusLabel.getStyleClass().add("label-status-fail");
-      } else {
-        categoryCombo.getItems().addAll(categories);
-      }
-
-      Button startQuizButton = new Button("Start Quiz");
-      startQuizButton.getStyleClass().add("button");
-
-      startQuizButton.setOnAction(e -> {
-        String selectedCategory = categoryCombo.getValue();
-        if (selectedCategory == null) {
-          statusLabel.setText("Please select a category!");
-          return;
-        }
-
-        int categoryId = db.getCategoryId(selectedCategory);
-        if (categoryId == -1) {
-          statusLabel.setText("Invalid category!");
-          statusLabel.getStyleClass().add("label-status-fail");
-          return;
-        }
-
-        int questionCount = db.getQuestionCount(categoryId);
-        if (questionCount == 0) {
-          statusLabel.setText("No questions available in " + selectedCategory);
-          statusLabel.getStyleClass().add("label-status-fail");
-          return;
-        }
-
-        int quizSize = 6;
-
-        // Build and switch to the quiz scene
-        Scene quizScene = BuildQuiz(stage, db, categoryId, selectedCategory, quizSize);
-        stage.setScene(quizScene);
-      });
-
-      VBox GenerateContainer = new VBox(20,
-              categoryLabel, categoryCombo,
-              startQuizButton,
-              statusLabel,
-              ReturnToMenu, Logout
-      );
-
-      GenerateContainer.setPadding(new Insets(SCENE_PADDING));
-      GenerateContainer.setAlignment(Pos.CENTER);
-
-      ScrollPane scrollPane = new ScrollPane(GenerateContainer);
-      scrollPane.setFitToWidth(true);
-      scrollPane.setPrefHeight(SCENE_HEIGHT);
-      scrollPane.getStyleClass().add("scroll-pane");
 
       Scene scene = new Scene(scrollPane, SCENE_WIDTH, SCENE_HEIGHT);
       applyCSS(scene);
